@@ -11,19 +11,6 @@ class LoginGoogle extends StatefulWidget {
 
 class _LoginGoogleState extends State<LoginGoogle> {
   bool _isSigningIn = false;
-  bool _autoTried = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _autoSignIn();
-  }
-
-  Future<void> _autoSignIn() async {
-    if (_autoTried) return;
-    _autoTried = true;
-    await _signIn();
-  }
 
   Future<void> _signIn() async {
     if (_isSigningIn) return;
@@ -35,7 +22,7 @@ class _LoginGoogleState extends State<LoginGoogle> {
     try {
       final googleUser = await GoogleSignIn().signIn();
 
-      // 사용자가 로그인 취소한 경우
+      // 사용자가 로그인 창에서 취소한 경우
       if (googleUser == null) {
         setState(() {
           _isSigningIn = false;
@@ -51,9 +38,9 @@ class _LoginGoogleState extends State<LoginGoogle> {
       );
 
       await FirebaseAuth.instance.signInWithCredential(credential);
-      // 성공 시 AuthGate가 FeedScreen으로 전환
+      // 성공 시 AuthGate에서 FeedScreen으로 전환됨
     } catch (e) {
-      // 로그인 실패 → 다시 로그인 화면 유지
+      // 로그인 실패 시 다시 로그인 버튼 상태로 복귀
       setState(() {
         _isSigningIn = false;
       });

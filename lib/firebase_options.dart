@@ -9,7 +9,7 @@ import 'package:flutter/foundation.dart'
 /// Example:
 /// ```dart
 /// import 'firebase_options.dart';
-/// // ...
+/// // ...3
 /// await Firebase.initializeApp(
 ///   options: DefaultFirebaseOptions.currentPlatform,
 /// );
