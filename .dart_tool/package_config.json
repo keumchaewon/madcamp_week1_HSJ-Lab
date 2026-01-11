@@ -45,7 +45,7 @@
     },
     {
       "name": "flutter",
-      "rootUri": "file:///Users/sungmin/Desktop/%EB%B3%B4%EA%B4%80%ED%95%A8/%EB%AA%B0%EC%9E%85%EC%BA%A0%ED%94%84/flutter/packages/flutter",
+      "rootUri": "file:///Users/sungmin/flutter/packages/flutter",
       "packageUri": "lib/",
       "languageVersion": "3.8"
     },
@@ -57,7 +57,7 @@
     },
     {
       "name": "flutter_test",
-      "rootUri": "file:///Users/sungmin/Desktop/%EB%B3%B4%EA%B4%80%ED%95%A8/%EB%AA%B0%EC%9E%85%EC%BA%A0%ED%94%84/flutter/packages/flutter_test",
+      "rootUri": "file:///Users/sungmin/flutter/packages/flutter_test",
       "packageUri": "lib/",
       "languageVersion": "3.8"
     },
@@ -111,7 +111,7 @@
     },
     {
       "name": "sky_engine",
-      "rootUri": "file:///Users/sungmin/Desktop/%EB%B3%B4%EA%B4%80%ED%95%A8/%EB%AA%B0%EC%9E%85%EC%BA%A0%ED%94%84/flutter/bin/cache/pkg/sky_engine",
+      "rootUri": "file:///Users/sungmin/flutter/bin/cache/pkg/sky_engine",
       "packageUri": "lib/",
       "languageVersion": "3.8"
     },
@@ -172,7 +172,7 @@
   ],
   "generator": "pub",
   "generatorVersion": "3.10.4",
-  "flutterRoot": "file:///Users/sungmin/Desktop/%EB%B3%B4%EA%B4%80%ED%95%A8/%EB%AA%B0%EC%9E%85%EC%BA%A0%ED%94%84/flutter",
+  "flutterRoot": "file:///Users/sungmin/flutter",
   "flutterVersion": "3.38.5",
   "pubCache": "file:///Users/sungmin/.pub-cache"
 }
