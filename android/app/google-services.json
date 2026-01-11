@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "933413662300",
+    "project_id": "madcamp-week1-c108a",
+    "storage_bucket": "madcamp-week1-c108a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:933413662300:android:ba7b24b5065a1cc4c44099",
+        "android_client_info": {
+          "package_name": "com.example.singasong"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDaseD3Tdusc3j9nlM7PGBVhHtcpT7itZE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
