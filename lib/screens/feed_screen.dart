@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 import '../widgets/track_feed_card.dart';
 
@@ -30,12 +32,18 @@ class _FeedScreenState extends State<FeedScreen> {
     super.dispose();
   }
 
+  // 로그아웃 처리
+  Future<void> _logout() async {
+    await FirebaseAuth.instance.signOut();
+    await GoogleSignIn().signOut();
+    // AuthGate에서 authStateChanges 감지 → LoginGoogle로 이동
+  }
+
   @override
   Widget build(BuildContext context) {
     final List<_TrackItem> filteredItems = _items.where((item) {
-      if (_query.isEmpty) {
-        return true;
-      }
+      if (_query.isEmpty) return true;
+
       final String lower = _query.toLowerCase();
       return item.trackTitle.toLowerCase().contains(lower) ||
           item.artistName.toLowerCase().contains(lower);
@@ -46,6 +54,9 @@ class _FeedScreenState extends State<FeedScreen> {
         title: const Text('Music Feed'),
         backgroundColor: Colors.white,
         elevation: 0,
+        actions: [
+          IconButton(icon: const Icon(Icons.logout), onPressed: _logout),
+        ],
       ),
       body: SafeArea(
         child: Column(
