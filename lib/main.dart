@@ -3,9 +3,11 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import 'firebase_options.dart';
+import 'screens/onboarding/onboarding_flow.dart';
 import 'screens/feed_screen.dart';
 import 'screens/login_google.dart';
 import 'screens/my_page_screen.dart';
+import 'state/app_state.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,19 +15,29 @@ void main() async {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  final AppState _appState = AppState();
+
+  @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'SingASong',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
+    return AppStateScope(
+      appState: _appState,
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'SingASong',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+          useMaterial3: true,
+        ),
+        home: const AuthGate(),
       ),
-      home: const AuthGate(),
     );
   }
 }
@@ -45,10 +57,27 @@ class AuthGate extends StatelessWidget {
         }
 
         if (snapshot.hasData) {
-          return const AppShell();
+          return const AppEntry();
         }
 
         return const LoginGoogle();
+      },
+    );
+  }
+}
+
+class AppEntry extends StatelessWidget {
+  const AppEntry({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final AppState appState = AppStateScope.of(context);
+    return AnimatedBuilder(
+      animation: appState,
+      builder: (context, _) {
+        return appState.onboarding.completed
+            ? const AppShell()
+            : const OnboardingFlow();
       },
     );
   }
