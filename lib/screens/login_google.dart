@@ -12,6 +12,18 @@ class LoginGoogle extends StatefulWidget {
 class _LoginGoogleState extends State<LoginGoogle> {
   bool _isSigningIn = false;
 
+  @override
+  void initState() {
+    super.initState();
+    _forceSignOutForTest();
+  }
+
+  // 테스트용: 항상 로그아웃 상태에서 시작
+  Future<void> _forceSignOutForTest() async {
+    await FirebaseAuth.instance.signOut();
+    await GoogleSignIn().signOut();
+  }
+
   Future<void> _signIn() async {
     if (_isSigningIn) return;
 
@@ -22,7 +34,7 @@ class _LoginGoogleState extends State<LoginGoogle> {
     try {
       final googleUser = await GoogleSignIn().signIn();
 
-      // 사용자가 로그인 창에서 취소한 경우
+      // 로그인 창에서 취소한 경우
       if (googleUser == null) {
         setState(() {
           _isSigningIn = false;
@@ -38,9 +50,13 @@ class _LoginGoogleState extends State<LoginGoogle> {
       );
 
       await FirebaseAuth.instance.signInWithCredential(credential);
-      // 성공 시 AuthGate에서 FeedScreen으로 전환됨
+      // 성공 시 AuthGate가 자동으로 FeedScreen으로 이동
     } catch (e) {
-      // 로그인 실패 시 다시 로그인 버튼 상태로 복귀
+      // 로그인 실패 알림
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('로그인에 실패했습니다. 다시 시도해주세요.')));
+
       setState(() {
         _isSigningIn = false;
       });
