@@ -1,17 +1,26 @@
 import 'package:flutter/material.dart';
 
+import '../screens/playlists/playlists_screen.dart';
+import '../state/app_state.dart';
+
 class MyPageScreen extends StatelessWidget {
   const MyPageScreen({super.key});
 
   static const int _posts = 5;
   static const int _followers = 6;
   static const int _following = 87;
-  static const String _handle = '@light_sky_30';
 
   @override
   Widget build(BuildContext context) {
     const double padding = 16;
     const double radius = 16;
+
+    final AppState appState = AppStateScope.of(context);
+    final String username = appState.onboarding.username.isEmpty
+        ? 'guest'
+        : appState.onboarding.username;
+    final List<String> genres = appState.onboarding.selectedGenres;
+    final List<Playlist> playlists = appState.playlists;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -43,9 +52,9 @@ class MyPageScreen extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 12),
-              const Text(
-                _handle,
-                style: TextStyle(
+              Text(
+                '@$username',
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
@@ -70,32 +79,107 @@ class MyPageScreen extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               const Text(
-                '플레이리스트',
+                '좋아하는 장르',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
                 ),
               ),
               const SizedBox(height: 12),
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: 6,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  childAspectRatio: 1,
+              if (genres.isEmpty)
+                const Text(
+                  '아직 선택한 장르가 없어요.',
+                  style: TextStyle(color: Color(0xFF94A3B8)),
+                )
+              else
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: genres
+                      .map(
+                        (genre) => Chip(
+                          label: Text(genre),
+                          backgroundColor: const Color(0xFFF1F5F9),
+                        ),
+                      )
+                      .toList(),
                 ),
-                itemBuilder: (context, index) {
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      border: Border.all(color: const Color(0xFFE0E4EA)),
-                      borderRadius: BorderRadius.circular(12),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    '플레이리스트',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  Text(
+                    '${playlists.length}개',
+                    style: const TextStyle(
+                      color: Color(0xFF64748B),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text(
+                  'Playlists',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                subtitle: const Text('썸네일 그리드로 보기'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const PlaylistsScreen(),
                     ),
                   );
                 },
+              ),
+              const SizedBox(height: 12),
+              Column(
+                children: playlists
+                    .map(
+                      (playlist) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 14,
+                          ),
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            border: Border.all(color: const Color(0xFFE0E4EA)),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  playlist.name,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                '${playlist.trackIds.length}곡',
+                                style: const TextStyle(
+                                  color: Color(0xFF6B7280),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    )
+                    .toList(),
               ),
             ],
           ),

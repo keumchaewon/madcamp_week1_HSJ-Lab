@@ -5,14 +5,12 @@ class TrackFeedCard extends StatelessWidget {
     super.key,
     required this.trackTitle,
     required this.artistName,
-    required this.isLiked,
-    required this.onLikeToggle,
+    required this.onAddToPlaylist,
   });
 
   final String trackTitle;
   final String artistName;
-  final bool isLiked;
-  final VoidCallback onLikeToggle;
+  final VoidCallback onAddToPlaylist;
 
   @override
   Widget build(BuildContext context) {
@@ -64,12 +62,10 @@ class TrackFeedCard extends StatelessWidget {
               ],
             ),
           ),
-          IconButton(
-            onPressed: onLikeToggle,
-            icon: Icon(
-              isLiked ? Icons.favorite : Icons.favorite_border,
-              color: isLiked ? const Color(0xFFE0245E) : null,
-            ),
+          TextButton.icon(
+            onPressed: onAddToPlaylist,
+            icon: const Icon(Icons.playlist_add),
+            label: const Text('Add'),
           ),
         ],
       ),
