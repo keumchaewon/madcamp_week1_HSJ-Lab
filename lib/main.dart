@@ -9,6 +9,7 @@ import './ui/screens/feed_screen.dart';
 import './ui/screens/login_google.dart';
 import './ui/screens/my_page_screen.dart';
 import 'state/app_state.dart';
+import 'data/services/user_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -68,21 +69,29 @@ class AuthGate extends StatelessWidget {
         if (snapshot.hasData) {
           final user = snapshot.data!;
           final appState = AppStateScope.of(context);
+          final service = UserService();
 
           WidgetsBinding.instance.addPostFrameCallback((_) async {
-            print('🔥 AUTH UID: ${user.uid}');
-
             appState.setUser(user.uid);
 
-            await FirebaseFirestore.instance
-                .collection('users')
-                .doc(user.uid)
-                .set({
-                  'onboardingCompleted': false,
-                  'createdAt': FieldValue.serverTimestamp(),
-                }, SetOptions(merge: true));
+            await service.ensureUserDoc(user.uid);
+            final data = await service.getUser(user.uid);
 
-            print('✅ FIRESTORE WRITE DONE');
+            if (data != null && data['username'] != null) {
+              appState.applyRemoteUser(
+                username: data['username'],
+                selectedGenres: List<String>.from(
+                  data['selectedGenres'] ?? const [],
+                ),
+                onboardingCompleted: true,
+              );
+            } else {
+              appState.applyRemoteUser(
+                username: '',
+                selectedGenres: const [],
+                onboardingCompleted: false,
+              );
+            }
           });
 
           return const AppEntry();

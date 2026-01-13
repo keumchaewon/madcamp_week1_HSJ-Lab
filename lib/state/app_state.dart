@@ -86,6 +86,17 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  // ===== Firestore → AppState 동기화 =====
+  void applyRemoteUser({
+    required String username,
+    required List<String> selectedGenres,
+    required bool onboardingCompleted,
+  }) {
+    if (onboardingCompleted) {
+      onboarding.complete(username: username, selectedGenres: selectedGenres);
+    }
+  }
+
   // ===== App startup 상태 =====
 
   // 앱이 초기화 완료되었는지
