@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../screens/playlists/playlists_screen.dart';
-import '../state/app_state.dart';
+import 'playlists/playlists_screen.dart';
+import '../../state/app_state.dart';
 
 class MyPageScreen extends StatelessWidget {
   const MyPageScreen({super.key});
@@ -70,20 +70,14 @@ class MyPageScreen extends StatelessWidget {
                 child: const Center(
                   child: Text(
                     'Timeline',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
               const SizedBox(height: 24),
               const Text(
                 '좋아하는 장르',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                ),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 12),
               if (genres.isEmpty)
@@ -110,10 +104,7 @@ class MyPageScreen extends StatelessWidget {
                 children: [
                   const Text(
                     '플레이리스트',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
                   ),
                   Text(
                     '${playlists.length}개',
@@ -201,18 +192,12 @@ class _StatItem extends StatelessWidget {
       children: [
         Text(
           '$value',
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-          ),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 4),
         Text(
           label,
-          style: const TextStyle(
-            fontSize: 12,
-            color: Colors.black54,
-          ),
+          style: const TextStyle(fontSize: 12, color: Colors.black54),
         ),
       ],
     );

@@ -16,11 +16,8 @@ class Track {
 }
 
 class Playlist {
-  Playlist({
-    required this.id,
-    required this.name,
-    List<String>? trackIds,
-  }) : trackIds = trackIds ?? <String>[];
+  Playlist({required this.id, required this.name, List<String>? trackIds})
+    : trackIds = trackIds ?? <String>[];
 
   final String id;
   final String name;
@@ -52,9 +49,8 @@ class OnboardingController extends ChangeNotifier {
 
   String get username => _state.username;
 
-  List<String> get selectedGenres => List<String>.unmodifiable(
-        _state.selectedGenres,
-      );
+  List<String> get selectedGenres =>
+      List<String>.unmodifiable(_state.selectedGenres);
 
   void complete({
     required String username,
@@ -65,7 +61,6 @@ class OnboardingController extends ChangeNotifier {
       username: username,
       selectedGenres: List<String>.from(selectedGenres),
     );
-    // TODO: Persist onboarding completion (SharedPreferences).
     notifyListeners();
   }
 }
@@ -76,6 +71,14 @@ class AppState extends ChangeNotifier {
   }
 
   final OnboardingController onboarding = OnboardingController();
+
+  // ===== App startup 상태 =====
+
+  // 앱이 초기화 완료되었는지
+  bool get isReady => true;
+
+  // 온보딩 완료 여부 (main.dart에서 사용 중)
+  bool get onboardingCompleted => onboarding.completed;
 
   int _playlistSeed = 4;
 
@@ -203,8 +206,8 @@ class AppStateScope extends InheritedNotifier<AppState> {
   }) : super(notifier: appState, child: child);
 
   static AppState of(BuildContext context) {
-    final AppStateScope? scope =
-        context.dependOnInheritedWidgetOfExactType<AppStateScope>();
+    final AppStateScope? scope = context
+        .dependOnInheritedWidgetOfExactType<AppStateScope>();
     assert(scope != null, 'AppStateScope not found in widget tree.');
     return scope!.notifier!;
   }

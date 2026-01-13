@@ -3,10 +3,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import 'firebase_options.dart';
-import 'screens/onboarding/onboarding_flow.dart';
-import 'screens/feed_screen.dart';
-import 'screens/login_google.dart';
-import 'screens/my_page_screen.dart';
+import './ui/screens/onboarding/onboarding_flow.dart';
+import './ui/screens/feed_screen.dart';
+import './ui/screens/login_google.dart';
+import './ui/screens/my_page_screen.dart';
 import 'state/app_state.dart';
 
 void main() async {
@@ -23,7 +23,13 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  final AppState _appState = AppState();
+  late final AppState _appState;
+
+  @override
+  void initState() {
+    super.initState();
+    _appState = AppState(); // 여기서 확실히 초기화
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,16 +56,19 @@ class AuthGate extends StatelessWidget {
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
+        // Firebase 연결 대기 중
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
         }
 
+        // 로그인 되어 있음
         if (snapshot.hasData) {
           return const AppEntry();
         }
 
+        // 로그인 안 됨
         return const LoginGoogle();
       },
     );
@@ -72,10 +81,18 @@ class AppEntry extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final AppState appState = AppStateScope.of(context);
+
     return AnimatedBuilder(
       animation: appState,
       builder: (context, _) {
-        return appState.onboarding.completed
+        // onboarding 상태가 아직 준비 안 된 경우 방어
+        if (!appState.isReady) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        return appState.onboardingCompleted
             ? const AppShell()
             : const OnboardingFlow();
       },
@@ -93,18 +110,12 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = const [
-    FeedScreen(),
-    MyPageScreen(),
-  ];
+  final List<Widget> _screens = const [FeedScreen(), MyPageScreen()];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
-      ),
+      body: IndexedStack(index: _currentIndex, children: _screens),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
         onDestinationSelected: (index) {
@@ -113,14 +124,8 @@ class _AppShellState extends State<AppShell> {
           });
         },
         destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person),
-            label: 'My Page',
-          ),
+          NavigationDestination(icon: Icon(Icons.home), label: 'Home'),
+          NavigationDestination(icon: Icon(Icons.person), label: 'My Page'),
         ],
       ),
     );

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../state/app_state.dart';
+import '../../../state/app_state.dart';
 import '../../widgets/playlist_grid_tile.dart';
 import 'playlist_detail_screen.dart';
 
@@ -13,9 +13,7 @@ class PlaylistsScreen extends StatelessWidget {
     final playlists = appState.playlists;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Playlists'),
-      ),
+      appBar: AppBar(title: const Text('Playlists')),
       body: playlists.isEmpty
           ? const Center(
               child: Column(
@@ -25,10 +23,7 @@ class PlaylistsScreen extends StatelessWidget {
                   SizedBox(height: 12),
                   Text(
                     'No playlists yet',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                   SizedBox(height: 6),
                   Text(
@@ -53,8 +48,8 @@ class PlaylistsScreen extends StatelessWidget {
                   final String? coverImageUrl = playlist.trackIds.isEmpty
                       ? null
                       : appState
-                          .findTrackById(playlist.trackIds.first)
-                          ?.albumImage;
+                            .findTrackById(playlist.trackIds.first)
+                            ?.albumImage;
 
                   return PlaylistGridTile(
                     name: playlist.name,
@@ -63,9 +58,8 @@ class PlaylistsScreen extends StatelessWidget {
                     onTap: () {
                       Navigator.of(context).push(
                         MaterialPageRoute<void>(
-                          builder: (_) => PlaylistDetailScreen(
-                            playlistId: playlist.id,
-                          ),
+                          builder: (_) =>
+                              PlaylistDetailScreen(playlistId: playlist.id),
                         ),
                       );
                     },
