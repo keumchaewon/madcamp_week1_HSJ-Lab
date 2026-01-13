@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../../data/services/feed_event_service.dart';
 import '../../state/app_state.dart';
 import '../widgets/track_feed_card.dart';
 
@@ -14,7 +16,6 @@ class FeedScreen extends StatefulWidget {
 
 class _FeedScreenState extends State<FeedScreen> {
   final TextEditingController _searchController = TextEditingController();
-
   String _query = '';
 
   @override
@@ -23,11 +24,9 @@ class _FeedScreenState extends State<FeedScreen> {
     super.dispose();
   }
 
-  // 로그아웃 처리
   Future<void> _logout() async {
     await FirebaseAuth.instance.signOut();
     await GoogleSignIn().signOut();
-    // AuthGate에서 authStateChanges 감지 → LoginGoogle로 이동
   }
 
   void _openAddToPlaylistSheet(Track track) {
@@ -37,7 +36,7 @@ class _FeedScreenState extends State<FeedScreen> {
       isScrollControlled: true,
       showDragHandle: true,
       backgroundColor: Colors.white,
-      builder: (sheetContext) {
+      builder: (_) {
         return _AddToPlaylistSheet(
           track: track,
           appState: appState,
@@ -49,15 +48,6 @@ class _FeedScreenState extends State<FeedScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final AppState appState = AppStateScope.of(context);
-    final List<FeedItem> filteredItems = appState.feedItems.where((item) {
-      if (_query.isEmpty) return true;
-
-      final String lower = _query.toLowerCase();
-      return item.trackTitle.toLowerCase().contains(lower) ||
-          item.artistName.toLowerCase().contains(lower);
-    }).toList();
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Music Feed'),
@@ -92,22 +82,55 @@ class _FeedScreenState extends State<FeedScreen> {
                 ),
               ),
             ),
+
+            /// ===== Firestore Feed =====
             Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                itemCount: filteredItems.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  final item = filteredItems[index];
-                  final Track track = Track(
-                    id: item.trackId,
-                    title: item.trackTitle,
-                    artist: item.artistName,
-                    albumImage: item.albumImageUrl,
-                  );
-                  return TrackFeedCard(
-                    feedItem: item,
-                    onAddToPlaylist: () => _openAddToPlaylistSheet(track),
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('feed_events')
+                    .orderBy('createdAt', descending: true)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    return const Center(
+                      child: Text(
+                        '아직 피드가 없어요.',
+                        style: TextStyle(color: Color(0xFF94A3B8)),
+                      ),
+                    );
+                  }
+
+                  final docs = snapshot.data!.docs.where((doc) {
+                    if (_query.isEmpty) return true;
+                    final data = doc.data()! as Map<String, dynamic>;
+                    final q = _query.toLowerCase();
+                    return (data['trackTitle'] as String)
+                            .toLowerCase()
+                            .contains(q) ||
+                        (data['artistName'] as String).toLowerCase().contains(
+                          q,
+                        );
+                  }).toList();
+
+                  return ListView.separated(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                    itemCount: docs.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final data = docs[index].data()! as Map<String, dynamic>;
+
+                      return TrackFeedCard.fromFeedEvent(
+                        actorUsername: data['actorUsername'],
+                        playlistName: data['playlistName'],
+                        trackTitle: data['trackTitle'],
+                        artistName: data['artistName'],
+                        albumImageUrl: data['albumImageUrl'],
+                      );
+                    },
                   );
                 },
               ),
@@ -144,36 +167,52 @@ class _AddToPlaylistSheetState extends State<_AddToPlaylistSheet> {
   }
 
   void _showSnackBar(String message) {
-    ScaffoldMessenger.of(widget.parentContext).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      widget.parentContext,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
-  void _handleCreate() {
+  /// ✅ async 필수
+  Future<void> _handleCreate() async {
     final String name = _controller.text.trim();
     if (name.isEmpty) {
       _showSnackBar('플레이리스트 이름을 입력해주세요.');
       return;
     }
-    widget.appState.addTrackToNewPlaylist(
+
+    await widget.appState.addTrackToNewPlaylist(
       name: name,
       trackId: widget.track.id,
     );
+
     _showSnackBar('"$name"에 추가했어요.');
-    Navigator.of(context).pop();
+    if (mounted) Navigator.of(context).pop();
   }
 
-  void _handleAddToPlaylist(Playlist playlist) {
-    final bool added = widget.appState.addTrackToPlaylist(
+  Future<void> _handleAddToPlaylist(Playlist playlist) async {
+    final bool added = await widget.appState.addTrackToPlaylist(
       playlistId: playlist.id,
       trackId: widget.track.id,
     );
+
     if (!added) {
       _showSnackBar('이미 추가된 곡이에요.');
       return;
     }
+
+    await FeedEventService.createAddTrackEvent(
+      actorUid: widget.appState.uid!,
+      actorUsername: widget.appState.onboarding.username,
+      playlistId: playlist.id,
+      playlistName: playlist.name,
+      trackId: widget.track.id,
+      trackTitle: widget.track.title,
+      artistName: widget.track.artist,
+      albumImageUrl: widget.track.albumImage,
+    );
+
     _showSnackBar('"${playlist.name}"에 추가했어요.');
-    Navigator.of(context).pop();
+    if (mounted) Navigator.of(context).pop();
   }
 
   @override
