@@ -122,9 +122,31 @@ class MyPageScreen extends StatelessWidget {
                       .toList(),
                 ),
               const SizedBox(height: 24),
-              const Text(
-                'Playlists',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Playlists',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Playlist 추가 기능은 백엔드 연동 후 활성화됩니다.'),
+                        ),
+                      );
+                    },
+                    child: const Icon(Icons.add),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.black87,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 12),
               const PlaylistsGrid(
