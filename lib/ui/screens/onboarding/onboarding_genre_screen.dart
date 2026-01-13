@@ -32,7 +32,7 @@ class OnboardingGenreScreen extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          '최소 2개 이상 선택해주세요. (${selectedGenres.length}/2)',
+          '최소 2개 이상 선택해주세요. (${selectedGenres.length})',
           style: const TextStyle(
             color: Color(0xFF6B7280),
             fontSize: 14,
@@ -73,7 +73,7 @@ class OnboardingGenreScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '$genre 예시',
+                        '$genre',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
