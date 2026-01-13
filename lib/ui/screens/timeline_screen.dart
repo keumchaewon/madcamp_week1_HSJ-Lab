@@ -102,7 +102,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
                     const Expanded(
                       child: Center(
                         child: Text(
-                          '怨??곸꽭 ?뺣낫',
+                          '곡 상세 정보',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
@@ -146,7 +146,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        '異붿뼲 硫붾え',
+                        '추억 메모',
                         style: TextStyle(
                           fontWeight: FontWeight.w700,
                           color: Color(0xFF6B7280),
@@ -154,7 +154,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        entry.memo.isEmpty ? '硫붾え媛 ?놁뼱??' : entry.memo,
+                        entry.memo.isEmpty ? '빈 메모' : entry.memo,
                         style: const TextStyle(color: Color(0xFF4B5563)),
                       ),
                     ],
@@ -175,7 +175,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
                       ),
                     ),
                     icon: const Icon(Icons.edit),
-                    label: const Text('?섏젙'),
+                    label: const Text('수정'),
                   ),
                 ),
               ],
@@ -309,8 +309,8 @@ class _TimelineEditorDialogState extends State<_TimelineEditorDialog> {
                 Expanded(
                   child: Text(
                     entry == null
-                        ? 'Add timeline entry'
-                        : 'Edit timeline entry',
+                        ? '곡 정보 수정'
+                        : '곡 정보 수정',
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
@@ -326,21 +326,21 @@ class _TimelineEditorDialogState extends State<_TimelineEditorDialog> {
             ),
             const SizedBox(height: 16),
             _LabeledField(
-              label: 'Title',
+              label: '곡 제목',
               child: TextField(
                 controller: titleController,
-                decoration: _inputDecoration('e.g. Bohemian Rhapsody'),
+                decoration: _inputDecoration('예시. Bohemian Rhapsody'),
               ),
             ),
             _LabeledField(
-              label: 'Artist',
+              label: '아티스트',
               child: TextField(
                 controller: artistController,
-                decoration: _inputDecoration('e.g. Queen'),
+                decoration: _inputDecoration('예시. Queen'),
               ),
             ),
             _LabeledField(
-              label: 'Date',
+              label: '날짜',
               child: TextField(
                 controller: dateController,
                 readOnly: true,
@@ -365,12 +365,12 @@ class _TimelineEditorDialogState extends State<_TimelineEditorDialog> {
               ),
             ),
             _LabeledField(
-              label: 'Memo',
+              label: '추억 메모',
               child: TextField(
                 controller: memoController,
                 minLines: 3,
                 maxLines: 4,
-                decoration: _inputDecoration('Add a short memory...'),
+                decoration: _inputDecoration('이 곡과 함께한 특별한 순간을 기록해보세요.'),
               ),
             ),
             const SizedBox(height: 8),
@@ -381,11 +381,14 @@ class _TimelineEditorDialogState extends State<_TimelineEditorDialog> {
                     onPressed: () => Navigator.of(context).pop(),
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size.fromHeight(44),
+                      foregroundColor: const Color(0xFF1F2937),
+                      backgroundColor: const Color(0xFFF1F5F9),
+                      side: const BorderSide(color: Color(0xFFE2E8F0)),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
                       ),
                     ),
-                    child: const Text('Cancel'),
+                    child: const Text('취소'),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -398,7 +401,7 @@ class _TimelineEditorDialogState extends State<_TimelineEditorDialog> {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text(
-                              'Please enter title, artist, and date.',
+                              '제목, 아티스트, 날짜를 입력해주세요',
                             ),
                           ),
                         );
@@ -414,12 +417,13 @@ class _TimelineEditorDialogState extends State<_TimelineEditorDialog> {
                     },
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size.fromHeight(44),
-                      backgroundColor: const Color(0xFF7C3AED),
+                      backgroundColor: Colors.purpleAccent,
+                      foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
                       ),
                     ),
-                    child: Text(entry == null ? 'Add' : 'Save'),
+                    child: Text(entry == null ? '추가' : '저장'),
                   ),
                 ),
               ],
@@ -472,7 +476,7 @@ class _TimelineHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: const [
                 Text(
-                  'timeline 482번째줄쯤에 있음',
+                  '나의 음악 타임라인',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
@@ -481,12 +485,12 @@ class _TimelineHeader extends StatelessWidget {
                 ),
                 SizedBox(height: 6),
                 Text(
-                  'timeline 491번째줄쯤에 있음, style: TextStyle(fontSize: 12, color: Color(0xFF9CA3AF)),',
+                  '특별한 순간과 함께한 노래들',
                 ),
               ],
             ),
           ),
-          _GradientButton(label: '+ 異붽?', onTap: onAdd),
+          _GradientButton(label: '추가', onTap: onAdd),
         ],
       ),
     );
@@ -569,7 +573,7 @@ class _TimelineTile extends StatelessWidget {
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min, // ?덉젙??媛뺥솕
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
                             entry.title,
