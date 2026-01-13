@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../screens/friends/friend_search_screen.dart';
 import '../screens/playlists/create_playlist_sheet.dart';
 import '../screens/playlists/playlists_screen.dart';
 import '../screens/timeline_screen.dart';
@@ -57,9 +58,19 @@ class MyPageScreen extends StatelessWidget {
                   Expanded(
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: const [
-                        _StatItem(label: 'playlists', value: _posts),
-                        _StatItem(label: 'friends', value: _following),
+                      children: [
+                        const _StatItem(label: 'playlists', value: _posts),
+                        _StatItem(
+                          label: 'friends',
+                          value: _following,
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => const FriendSearchScreen(),
+                              ),
+                            );
+                          },
+                        ),
                       ],
                     ),
                   ),
@@ -170,14 +181,19 @@ class MyPageScreen extends StatelessWidget {
 }
 
 class _StatItem extends StatelessWidget {
-  const _StatItem({required this.label, required this.value});
+  const _StatItem({
+    required this.label,
+    required this.value,
+    this.onTap,
+  });
 
   final String label;
   final int value;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    final child = Column(
       children: [
         Text(
           '$value',
@@ -195,6 +211,19 @@ class _StatItem extends StatelessWidget {
           ),
         ),
       ],
+    );
+
+    if (onTap == null) {
+      return child;
+    }
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: child,
+      ),
     );
   }
 }
