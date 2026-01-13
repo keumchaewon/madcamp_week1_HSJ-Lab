@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../state/app_state.dart';
 import 'onboarding_genre_screen.dart';
@@ -108,8 +109,17 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
     });
   }
 
-  void _finishOnboarding() {
+  Future<void> _finishOnboarding() async {
     final AppState appState = AppStateScope.of(context);
+
+    // 1. Firestore 업데이트
+    await FirebaseFirestore.instance.collection('users').doc(appState.uid).set({
+      'username': _username,
+      'selectedGenres': _selectedGenres,
+      'onboardingCompleted': true,
+    }, SetOptions(merge: true));
+
+    // 2.AppState 즉시 반영 (이게 제일 중요)
     appState.onboarding.complete(
       username: _username,
       selectedGenres: _selectedGenres,
