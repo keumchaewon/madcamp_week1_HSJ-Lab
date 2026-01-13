@@ -15,12 +15,8 @@ class FeedScreen extends StatefulWidget {
 }
 
 class _FeedScreenState extends State<FeedScreen> {
-  final TextEditingController _searchController = TextEditingController();
-  String _query = '';
-
   @override
   void dispose() {
-    _searchController.dispose();
     super.dispose();
   }
 
@@ -60,29 +56,6 @@ class _FeedScreenState extends State<FeedScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-              child: TextField(
-                controller: _searchController,
-                onChanged: (value) {
-                  setState(() {
-                    _query = value.trim();
-                  });
-                },
-                decoration: InputDecoration(
-                  hintText: 'Search tracks or artists',
-                  prefixIcon: const Icon(Icons.search),
-                  filled: true,
-                  fillColor: const Color(0xFFF4F5F7),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-            ),
-
             /// ===== Firestore Feed =====
             Expanded(
               child: StreamBuilder<QuerySnapshot>(
@@ -104,24 +77,13 @@ class _FeedScreenState extends State<FeedScreen> {
                     );
                   }
 
-                  final docs = snapshot.data!.docs.where((doc) {
-                    if (_query.isEmpty) return true;
-                    final data = doc.data()! as Map<String, dynamic>;
-                    final q = _query.toLowerCase();
-                    return (data['trackTitle'] as String)
-                            .toLowerCase()
-                            .contains(q) ||
-                        (data['artistName'] as String).toLowerCase().contains(
-                          q,
-                        );
-                  }).toList();
-
                   return ListView.separated(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                    itemCount: docs.length,
+                    itemCount: snapshot.data!.docs.length,
                     separatorBuilder: (_, __) => const SizedBox(height: 12),
                     itemBuilder: (context, index) {
-                      final data = docs[index].data()! as Map<String, dynamic>;
+                      final data = snapshot.data!.docs[index].data()!
+                          as Map<String, dynamic>;
 
                       return TrackFeedCard.fromFeedEvent(
                         actorUsername: data['actorUsername'],
