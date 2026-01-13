@@ -26,38 +26,42 @@ class MyPageScreen extends StatelessWidget {
       backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(padding, 16, padding, 24),
+          padding: const EdgeInsets.fromLTRB(padding, 20, padding, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const CircleAvatar(
-                    radius: 44,
-                    backgroundColor: Color(0xFFF1F3F6),
-                    child: Icon(Icons.person, size: 44, color: Colors.black54),
+                  Column(
+                    children: [
+                      const CircleAvatar(
+                        radius: 44,
+                        backgroundColor: Color(0xFFF1F3F6),
+                        child:
+                            Icon(Icons.person, size: 44, color: Colors.black54),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '@$username',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 20),
+                  const SizedBox(width: 24),
                   Expanded(
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: const [
-                        _StatItem(label: 'posts', value: _posts),
-                        _StatItem(label: 'followers', value: _followers),
-                        _StatItem(label: 'following', value: _following),
+                        _StatItem(label: 'playlists', value: _posts),
+                        _StatItem(label: 'friends', value: _following),
                       ],
                     ),
                   ),
                 ],
-              ),
-              const SizedBox(height: 12),
-              Text(
-                '@$username',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
               ),
               const SizedBox(height: 20),
               Material(
