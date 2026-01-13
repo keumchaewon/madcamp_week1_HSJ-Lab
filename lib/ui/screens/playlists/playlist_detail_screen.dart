@@ -3,7 +3,10 @@ import 'package:flutter/material.dart';
 import '../../../state/app_state.dart';
 
 class PlaylistDetailScreen extends StatelessWidget {
-  const PlaylistDetailScreen({super.key, required this.playlistId});
+  const PlaylistDetailScreen({
+    super.key,
+    required this.playlistId,
+  });
 
   final String playlistId;
 
@@ -13,7 +16,9 @@ class PlaylistDetailScreen extends StatelessWidget {
     final Playlist? playlist = appState.findPlaylistById(playlistId);
 
     if (playlist == null) {
-      return const Scaffold(body: Center(child: Text('Playlist not found')));
+      return const Scaffold(
+        body: Center(child: Text('Playlist not found')),
+      );
     }
 
     final String? coverImageUrl = playlist.trackIds.isEmpty
@@ -21,7 +26,9 @@ class PlaylistDetailScreen extends StatelessWidget {
         : appState.findTrackById(playlist.trackIds.first)?.albumImage;
 
     return Scaffold(
-      appBar: AppBar(title: Text(playlist.name)),
+      appBar: AppBar(
+        title: Text(playlist.name),
+      ),
       body: Column(
         children: [
           Padding(
@@ -120,15 +127,16 @@ class PlaylistDetailScreen extends StatelessWidget {
                         trailing: IconButton(
                           icon: const Icon(Icons.remove_circle_outline),
                           onPressed: () {
-                            final bool removed = appState
-                                .removeTrackFromPlaylist(
-                                  playlistId: playlist.id,
-                                  trackId: track.id,
-                                );
+                            final bool removed =
+                                appState.removeTrackFromPlaylist(
+                              playlistId: playlist.id,
+                              trackId: track.id,
+                            );
                             if (removed) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                  content: Text('Removed from playlist'),
+                                  content:
+                                      Text('Removed from playlist'),
                                 ),
                               );
                             }
