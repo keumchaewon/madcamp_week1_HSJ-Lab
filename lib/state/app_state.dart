@@ -72,6 +72,20 @@ class AppState extends ChangeNotifier {
 
   final OnboardingController onboarding = OnboardingController();
 
+  String? _uid;
+
+  String? get uid => _uid;
+
+  void setUser(String uid) {
+    _uid = uid;
+    notifyListeners();
+  }
+
+  void clearUser() {
+    _uid = null;
+    notifyListeners();
+  }
+
   // ===== App startup 상태 =====
 
   // 앱이 초기화 완료되었는지
