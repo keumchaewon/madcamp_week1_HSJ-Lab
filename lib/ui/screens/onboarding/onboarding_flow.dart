@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../state/app_state.dart';
+import '../../../state/app_state.dart';
 import 'onboarding_genre_screen.dart';
 import 'onboarding_id_screen.dart';
 
@@ -15,8 +15,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   static const List<String> _blockedNames = <String>['admin', 'test'];
   static final RegExp _idRegex = RegExp(r'^[a-zA-Z0-9_]{3,15}$');
 
-  final Map<String, List<String>> _genreExamples =
-      <String, List<String>>{
+  final Map<String, List<String>> _genreExamples = <String, List<String>>{
     'Pop': <String>[
       'Down Bad - Taylor Swift',
       'Levitating - Dua Lipa',
@@ -42,11 +41,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       'Cherry Wine - Hozier',
       'Electric Feel - MGMT',
     ],
-    'EDM': <String>[
-      'Titanium - David Guetta',
-      'Stay - Zedd',
-      'Clarity - Zedd',
-    ],
+    'EDM': <String>['Titanium - David Guetta', 'Stay - Zedd', 'Clarity - Zedd'],
     'Jazz': <String>[
       'Take Five - Dave Brubeck',
       'So What - Miles Davis',

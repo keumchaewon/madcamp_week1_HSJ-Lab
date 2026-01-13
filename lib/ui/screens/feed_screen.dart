@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
-import '../state/app_state.dart';
+import '../../state/app_state.dart';
 import '../widgets/track_feed_card.dart';
 
 class FeedScreen extends StatefulWidget {
@@ -139,9 +139,9 @@ class _AddToPlaylistSheetState extends State<_AddToPlaylistSheet> {
   }
 
   void _showSnackBar(String message) {
-    ScaffoldMessenger.of(widget.parentContext).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      widget.parentContext,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   void _handleCreate() {
@@ -150,10 +150,7 @@ class _AddToPlaylistSheetState extends State<_AddToPlaylistSheet> {
       _showSnackBar('플레이리스트 이름을 입력해주세요.');
       return;
     }
-    widget.appState.addTrackToNewPlaylist(
-      name: name,
-      trackId: widget.track.id,
-    );
+    widget.appState.addTrackToNewPlaylist(name: name, trackId: widget.track.id);
     _showSnackBar('"$name"에 추가했어요.');
     Navigator.of(context).pop();
   }
