@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../screens/playlists/playlists_screen.dart';
+import '../screens/timeline_screen.dart';
 import '../../state/app_state.dart';
 
 class MyPageScreen extends StatelessWidget {
@@ -59,19 +60,32 @@ class MyPageScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              Container(
-                height: 96,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF4F5F7),
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
                   borderRadius: BorderRadius.circular(radius),
-                ),
-                child: const Center(
-                  child: Text(
-                    'Timeline',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const TimelineScreen(),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    height: 96,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF4F5F7),
+                      borderRadius: BorderRadius.circular(radius),
+                    ),
+                    child: const Center(
+                      child: Text(
+                        'Timeline',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ),
                 ),
