@@ -1,21 +1,25 @@
 import 'package:flutter/material.dart';
 
+import '../state/app_state.dart';
+
 class TrackFeedCard extends StatelessWidget {
   const TrackFeedCard({
     super.key,
-    required this.trackTitle,
-    required this.artistName,
+    required this.feedItem,
     required this.onAddToPlaylist,
   });
 
-  final String trackTitle;
-  final String artistName;
+  final FeedItem feedItem;
   final VoidCallback onAddToPlaylist;
 
   @override
   Widget build(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
+    final TextTheme textTheme = Theme.of(context).textTheme;
+    final String handle = feedItem.addedByHandle;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.fromLTRB(16, 12, 12, 14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -28,47 +32,102 @@ class TrackFeedCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFFB0B7C3)),
-            ),
-            child: const Icon(Icons.play_arrow, size: 24),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  trackTitle,
-                  style: const TextStyle(
-                    fontSize: 16,
+          Row(
+            children: [
+              _ProfileAvatar(
+                imageUrl: feedItem.addedByProfileImageUrl,
+                handle: handle,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  '@$handle',
+                  style: textTheme.labelMedium?.copyWith(
+                    color: colors.onSurfaceVariant,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  artistName,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: Color(0xFF6B7280),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-          TextButton.icon(
-            onPressed: onAddToPlaylist,
-            icon: const Icon(Icons.playlist_add),
-            label: const Text('Add'),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: const Color(0xFFB0B7C3)),
+                ),
+                child: const Icon(Icons.play_arrow, size: 24),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      feedItem.trackTitle,
+                      style: textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      feedItem.artistName,
+                      style: textTheme.bodySmall?.copyWith(
+                        color: colors.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                onPressed: onAddToPlaylist,
+                icon: const Icon(Icons.playlist_add),
+                padding: const EdgeInsets.only(left: 12, right: 4),
+                tooltip: 'Add to playlist',
+              ),
+            ],
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ProfileAvatar extends StatelessWidget {
+  const _ProfileAvatar({
+    required this.imageUrl,
+    required this.handle,
+  });
+
+  final String? imageUrl;
+  final String handle;
+
+  @override
+  Widget build(BuildContext context) {
+    final String trimmed = handle.trim();
+    final String initial = trimmed.isEmpty ? '?' : trimmed[0].toUpperCase();
+    final ColorScheme colors = Theme.of(context).colorScheme;
+
+    return CircleAvatar(
+      radius: 16,
+      backgroundColor: colors.surfaceVariant,
+      foregroundColor: colors.onSurfaceVariant,
+      backgroundImage: (imageUrl != null && imageUrl!.isNotEmpty)
+          ? NetworkImage(imageUrl!)
+          : null,
+      child: (imageUrl == null || imageUrl!.isEmpty)
+          ? Text(
+              initial,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            )
+          : null,
     );
   }
 }

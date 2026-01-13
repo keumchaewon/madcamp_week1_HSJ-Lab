@@ -5,7 +5,12 @@ import 'onboarding_genre_screen.dart';
 import 'onboarding_id_screen.dart';
 
 class OnboardingFlow extends StatefulWidget {
-  const OnboardingFlow({super.key});
+  const OnboardingFlow({
+    super.key,
+    required this.appState,
+  });
+
+  final AppState appState;
 
   @override
   State<OnboardingFlow> createState() => _OnboardingFlowState();
@@ -114,8 +119,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
   }
 
   void _finishOnboarding() {
-    final AppState appState = AppStateScope.of(context);
-    appState.onboarding.complete(
+    widget.appState.onboarding.complete(
       username: _username,
       selectedGenres: _selectedGenres,
     );

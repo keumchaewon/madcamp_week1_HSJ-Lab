@@ -15,6 +15,30 @@ class Track {
   final String albumImage;
 }
 
+class FeedItem {
+  const FeedItem({
+    required this.id,
+    required this.trackId,
+    required this.trackTitle,
+    required this.artistName,
+    required this.albumImageUrl,
+    required this.spotifyTrackId,
+    required this.addedByUid,
+    required this.addedByHandle,
+    this.addedByProfileImageUrl,
+  });
+
+  final String id;
+  final String trackId;
+  final String trackTitle;
+  final String artistName;
+  final String albumImageUrl;
+  final String spotifyTrackId;
+  final String addedByUid;
+  final String addedByHandle;
+  final String? addedByProfileImageUrl;
+}
+
 class Playlist {
   Playlist({
     required this.id,
@@ -128,6 +152,57 @@ class AppState extends ChangeNotifier {
       artist: 'The Weeknd',
       albumImage:
           'https://images.unsplash.com/photo-1495433324511-bf8e92934d90?w=800&auto=format&fit=crop',
+    ),
+  ];
+
+  final List<FeedItem> feedItems = <FeedItem>[
+    const FeedItem(
+      id: 'f1',
+      trackId: 't1',
+      trackTitle: 'Down Bad',
+      artistName: 'Taylor Swift',
+      albumImageUrl:
+          'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&auto=format&fit=crop',
+      spotifyTrackId: 'spotify:track:downbad',
+      addedByUid: 'u_chaewon',
+      addedByHandle: 'chaewon_gold',
+      addedByProfileImageUrl:
+          'https://images.unsplash.com/photo-1544723795-3fb6469f5b39?w=400&auto=format&fit=crop',
+    ),
+    const FeedItem(
+      id: 'f2',
+      trackId: 't3',
+      trackTitle: 'Blue Lights',
+      artistName: 'Jorja Smith',
+      albumImageUrl:
+          'https://images.unsplash.com/photo-1485579149621-3123dd979885?w=800&auto=format&fit=crop',
+      spotifyTrackId: 'spotify:track:bluelights',
+      addedByUid: 'u_min',
+      addedByHandle: 'min_sounds',
+    ),
+    const FeedItem(
+      id: 'f3',
+      trackId: 't4',
+      trackTitle: 'Sunset Lover',
+      artistName: 'Petit Biscuit',
+      albumImageUrl:
+          'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&auto=format&fit=crop',
+      spotifyTrackId: 'spotify:track:sunsetlover',
+      addedByUid: 'u_jae',
+      addedByHandle: 'jae.playlist',
+      addedByProfileImageUrl:
+          'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=400&auto=format&fit=crop',
+    ),
+    const FeedItem(
+      id: 'f4',
+      trackId: 't6',
+      trackTitle: 'Midnight City',
+      artistName: 'M83',
+      albumImageUrl:
+          'https://images.unsplash.com/photo-1516280440614-37939bbacd81?w=800&auto=format&fit=crop',
+      spotifyTrackId: 'spotify:track:midnightcity',
+      addedByUid: 'u_sora',
+      addedByHandle: 'sora_mixes',
     ),
   ];
 

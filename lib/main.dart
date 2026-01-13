@@ -77,7 +77,7 @@ class AppEntry extends StatelessWidget {
       builder: (context, _) {
         return appState.onboarding.completed
             ? const AppShell()
-            : const OnboardingFlow();
+            : OnboardingFlow(appState: appState);
       },
     );
   }

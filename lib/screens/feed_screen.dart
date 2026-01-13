@@ -50,12 +50,12 @@ class _FeedScreenState extends State<FeedScreen> {
   @override
   Widget build(BuildContext context) {
     final AppState appState = AppStateScope.of(context);
-    final List<Track> filteredItems = appState.tracks.where((item) {
+    final List<FeedItem> filteredItems = appState.feedItems.where((item) {
       if (_query.isEmpty) return true;
 
       final String lower = _query.toLowerCase();
-      return item.title.toLowerCase().contains(lower) ||
-          item.artist.toLowerCase().contains(lower);
+      return item.trackTitle.toLowerCase().contains(lower) ||
+          item.artistName.toLowerCase().contains(lower);
     }).toList();
 
     return Scaffold(
@@ -99,10 +99,15 @@ class _FeedScreenState extends State<FeedScreen> {
                 separatorBuilder: (_, __) => const SizedBox(height: 12),
                 itemBuilder: (context, index) {
                   final item = filteredItems[index];
+                  final Track track = Track(
+                    id: item.trackId,
+                    title: item.trackTitle,
+                    artist: item.artistName,
+                    albumImage: item.albumImageUrl,
+                  );
                   return TrackFeedCard(
-                    trackTitle: item.title,
-                    artistName: item.artist,
-                    onAddToPlaylist: () => _openAddToPlaylistSheet(item),
+                    feedItem: item,
+                    onAddToPlaylist: () => _openAddToPlaylistSheet(track),
                   );
                 },
               ),
