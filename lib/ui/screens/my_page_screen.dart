@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../screens/playlists/create_playlist_sheet.dart';
 import '../screens/playlists/playlists_screen.dart';
 import '../screens/timeline_screen.dart';
 import '../../state/app_state.dart';
+import '../../state/playlist_store.dart';
 
 class MyPageScreen extends StatelessWidget {
   const MyPageScreen({super.key});
@@ -131,9 +133,14 @@ class MyPageScreen extends StatelessWidget {
                   ),
                   TextButton(
                     onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Playlist 추가 기능은 백엔드 연동 후 활성화됩니다.'),
+                      showModalBottomSheet<void>(
+                        context: context,
+                        isScrollControlled: true,
+                        builder: (_) => CreatePlaylistSheet(
+                          onCreate: (title) {
+                            final playlistStore = PlaylistStore(appState);
+                            playlistStore.createPlaylist(title);
+                          },
                         ),
                       );
                     },

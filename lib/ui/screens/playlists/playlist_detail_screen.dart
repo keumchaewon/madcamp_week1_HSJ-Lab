@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../../data/repositories/track_repository.dart';
 import '../../../state/app_state.dart';
+import '../../../state/playlist_store.dart';
+import 'track_search_sheet.dart';
 
 class PlaylistDetailScreen extends StatelessWidget {
   const PlaylistDetailScreen({super.key, required this.playlistId});
@@ -11,6 +14,7 @@ class PlaylistDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final AppState appState = AppStateScope.of(context);
     final Playlist? playlist = appState.findPlaylistById(playlistId);
+    final TrackRepository trackRepository = TrackRepository();
 
     if (playlist == null) {
       return const Scaffold(body: Center(child: Text('Playlist not found')));
@@ -18,10 +22,26 @@ class PlaylistDetailScreen extends StatelessWidget {
 
     final String? coverImageUrl = playlist.trackIds.isEmpty
         ? null
-        : appState.findTrackById(playlist.trackIds.first)?.albumImage;
+        : trackRepository
+            .getTrackById(playlist.trackIds.first)
+            ?.albumImageUrl;
 
     return Scaffold(
-      appBar: AppBar(title: Text(playlist.name)),
+      appBar: AppBar(
+        title: Text(playlist.name),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: () {
+              showModalBottomSheet<void>(
+                context: context,
+                isScrollControlled: true,
+                builder: (_) => TrackSearchSheet(playlistId: playlist.id),
+              );
+            },
+          ),
+        ],
+      ),
       body: Column(
         children: [
           Padding(
@@ -100,7 +120,8 @@ class PlaylistDetailScreen extends StatelessWidget {
                     separatorBuilder: (_, __) => const SizedBox(height: 8),
                     itemBuilder: (context, index) {
                       final trackId = playlist.trackIds[index];
-                      final Track? track = appState.findTrackById(trackId);
+                      final track =
+                          trackRepository.getTrackById(trackId);
                       if (track == null) {
                         return const SizedBox.shrink();
                       }
@@ -108,23 +129,34 @@ class PlaylistDetailScreen extends StatelessWidget {
                         contentPadding: EdgeInsets.zero,
                         leading: ClipRRect(
                           borderRadius: BorderRadius.circular(8),
-                          child: Image.network(
-                            track.albumImage,
-                            width: 48,
-                            height: 48,
-                            fit: BoxFit.cover,
-                          ),
+                          child: track.albumImageUrl == null
+                              ? Container(
+                                  width: 48,
+                                  height: 48,
+                                  color: const Color(0xFFF1F5F9),
+                                  child: const Icon(
+                                    Icons.music_note,
+                                    color: Color(0xFF94A3B8),
+                                  ),
+                                )
+                              : Image.network(
+                                  track.albumImageUrl!,
+                                  width: 48,
+                                  height: 48,
+                                  fit: BoxFit.cover,
+                                ),
                         ),
                         title: Text(track.title),
                         subtitle: Text(track.artist),
                         trailing: IconButton(
                           icon: const Icon(Icons.remove_circle_outline),
-                          onPressed: () async {
-                            final bool removed = await appState
+                          onPressed: () {
+                            final playlistStore = PlaylistStore(appState);
+                            final bool removed = playlistStore
                                 .removeTrackFromPlaylist(
-                                  playlistId: playlist.id,
-                                  trackId: track.id,
-                                );
+                              playlistId: playlist.id,
+                              trackId: track.id,
+                            );
                             if (removed && context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(

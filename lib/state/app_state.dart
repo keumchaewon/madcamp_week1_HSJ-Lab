@@ -116,14 +116,26 @@ class AppState extends ChangeNotifier {
 
   String? _uid;
   String? get uid => _uid;
+  bool _isUserInitializing = false;
+  bool _isPlaylistsLoading = false;
 
   /* ===== 로그인 / 로그아웃 ===== */
 
   Future<void> setUser(String uid) async {
-    _uid = uid;
-    playlists.clear();
-    await TrackService().seedDummyTracksIfEmpty();
-    await loadPlaylists();
+    if (_uid == uid && playlists.isNotEmpty) {
+      return;
+    }
+    if (_isUserInitializing) return;
+    _isUserInitializing = true;
+    try {
+      _uid = uid;
+      playlists.clear();
+      notifyListeners();
+      await TrackService().seedDummyTracksIfEmpty();
+      await loadPlaylists();
+    } finally {
+      _isUserInitializing = false;
+    }
   }
 
   void clearUser() {
@@ -229,19 +241,29 @@ class AppState extends ChangeNotifier {
 
   Future<void> loadPlaylists() async {
     if (_uid == null) return;
+    if (_isPlaylistsLoading) return;
+    _isPlaylistsLoading = true;
 
-    final service = PlaylistService(uid: _uid!);
-    final remote = await service.fetchPlaylists();
+    try {
+      final service = PlaylistService(uid: _uid!);
+      final remote = await service.fetchPlaylists();
 
-    playlists
-      ..clear()
-      ..addAll(
-        remote.map(
-          (p) => Playlist(id: p.id, name: p.name, trackIds: p.trackIds),
-        ),
-      );
+      final Map<String, Playlist> merged = <String, Playlist>{
+        for (final p in playlists) p.id: p,
+      };
 
-    notifyListeners();
+      for (final p in remote) {
+        merged[p.id] = Playlist(id: p.id, name: p.name, trackIds: p.trackIds);
+      }
+
+      playlists
+        ..clear()
+        ..addAll(merged.values);
+
+      notifyListeners();
+    } finally {
+      _isPlaylistsLoading = false;
+    }
   }
 
   Future<void> addTrackToNewPlaylist({

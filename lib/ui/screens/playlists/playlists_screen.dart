@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../data/repositories/track_repository.dart';
 import '../../../state/app_state.dart';
 import '../../widgets/playlist_grid_tile.dart';
 import 'playlist_detail_screen.dart';
@@ -34,6 +35,7 @@ class PlaylistsGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final AppState appState = AppStateScope.of(context);
     final playlists = appState.playlists;
+    final TrackRepository trackRepository = TrackRepository();
 
     if (playlists.isEmpty) {
       return const Center(
@@ -75,9 +77,9 @@ class PlaylistsGrid extends StatelessWidget {
           final playlist = playlists[index];
           final String? coverImageUrl = playlist.trackIds.isEmpty
               ? null
-              : appState
-                  .findTrackById(playlist.trackIds.first)
-                  ?.albumImage;
+              : trackRepository
+                  .getTrackById(playlist.trackIds.first)
+                  ?.albumImageUrl;
 
           return PlaylistGridTile(
             name: playlist.name,

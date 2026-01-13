@@ -30,21 +30,26 @@ class PlaylistService {
     required String name,
     List<String>? trackIds,
   }) async {
-    final docRef = _playlistRef.doc();
+    try {
+      final docRef = _playlistRef.doc();
 
-    final playlist = UserPlaylist(
-      id: docRef.id,
-      name: name,
-      trackIds: trackIds ?? <String>[],
-    );
+      final playlist = UserPlaylist(
+        id: docRef.id,
+        name: name,
+        trackIds: trackIds ?? <String>[],
+      );
 
-    await docRef.set({
-      'name': playlist.name,
-      'trackIds': playlist.trackIds,
-      'createdAt': FieldValue.serverTimestamp(),
-    });
+      await docRef.set({
+        'name': playlist.name,
+        'trackIds': playlist.trackIds,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
 
-    return playlist;
+      return playlist;
+    } catch (e) {
+      print('createPlaylist failed: $e');
+      rethrow;
+    }
   }
 
   // =========================
@@ -54,9 +59,14 @@ class PlaylistService {
     required String playlistId,
     required String trackId,
   }) async {
-    await _playlistRef.doc(playlistId).update({
-      'trackIds': FieldValue.arrayUnion([trackId]),
-    });
+    try {
+      await _playlistRef.doc(playlistId).update({
+        'trackIds': FieldValue.arrayUnion([trackId]),
+      });
+    } catch (e) {
+      print('addTrack failed: $e');
+      rethrow;
+    }
   }
 
   // =========================
