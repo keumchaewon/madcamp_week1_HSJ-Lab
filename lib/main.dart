@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'firebase_options.dart';
 import './ui/screens/onboarding/onboarding_flow.dart';
@@ -30,7 +29,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    _appState = AppState(); // 여기서 확실히 초기화
+    _appState = AppState(); // App 전체에서 단일 인스턴스
   }
 
   @override
@@ -50,77 +49,87 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
-class AuthGate extends StatelessWidget {
+/* =========================
+   AuthGate (핵심 수정)
+========================= */
+
+class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
+
+  @override
+  State<AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<AuthGate> {
+  String? _initializedUid;
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
-        // Firebase 연결 대기 중
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
         }
 
-        // 로그인 되어 있음
         if (snapshot.hasData) {
           final user = snapshot.data!;
           final appState = AppStateScope.of(context);
-          final service = UserService();
 
-          WidgetsBinding.instance.addPostFrameCallback((_) async {
-            appState.setUser(user.uid);
-
-            await service.ensureUserDoc(user.uid);
-            final data = await service.getUser(user.uid);
-
-            if (data != null && data['username'] != null) {
-              appState.applyRemoteUser(
-                username: data['username'],
-                selectedGenres: List<String>.from(
-                  data['selectedGenres'] ?? const [],
-                ),
-                onboardingCompleted: true,
-              );
-            } else {
-              appState.applyRemoteUser(
-                username: '',
-                selectedGenres: const [],
-                onboardingCompleted: false,
-              );
-            }
-          });
+          // UID가 바뀔 때만 초기화 (중복 실행 방지)
+          if (_initializedUid != user.uid) {
+            _initializedUid = user.uid;
+            _initializeUser(appState, user.uid);
+          }
 
           return const AppEntry();
         }
 
-        // 로그인 안 됨
+        _initializedUid = null;
         return const LoginGoogle();
       },
     );
   }
+
+  Future<void> _initializeUser(AppState appState, String uid) async {
+    final service = UserService();
+
+    await appState.setUser(uid);
+    await service.ensureUserDoc(uid);
+    final data = await service.getUser(uid);
+
+    if (data != null && data['username'] != null) {
+      appState.applyRemoteUser(
+        username: data['username'],
+        selectedGenres: List<String>.from(data['selectedGenres'] ?? const []),
+        onboardingCompleted: true,
+      );
+    } else {
+      appState.applyRemoteUser(
+        username: '',
+        selectedGenres: const [],
+        onboardingCompleted: false,
+      );
+    }
+  }
 }
+
+/* =========================
+   App Entry
+========================= */
 
 class AppEntry extends StatelessWidget {
   const AppEntry({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final AppState appState = AppStateScope.of(context);
+    final appState = AppStateScope.of(context);
 
     return AnimatedBuilder(
       animation: appState,
       builder: (context, _) {
-        // onboarding 상태가 아직 준비 안 된 경우 방어
-        if (!appState.isReady) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
-
         return appState.onboardingCompleted
             ? const AppShell()
             : const OnboardingFlow();
@@ -128,6 +137,10 @@ class AppEntry extends StatelessWidget {
     );
   }
 }
+
+/* =========================
+   App Shell
+========================= */
 
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
@@ -148,9 +161,7 @@ class _AppShellState extends State<AppShell> {
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
         onDestinationSelected: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
+          setState(() => _currentIndex = index);
         },
         destinations: const [
           NavigationDestination(icon: Icon(Icons.home), label: 'Home'),
