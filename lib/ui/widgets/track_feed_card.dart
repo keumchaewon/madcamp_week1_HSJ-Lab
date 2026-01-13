@@ -7,16 +7,47 @@ class TrackFeedCard extends StatelessWidget {
     super.key,
     required this.feedItem,
     required this.onAddToPlaylist,
+    this.subtitleOverride,
   });
 
   final FeedItem feedItem;
-  final VoidCallback onAddToPlaylist;
+  final VoidCallback? onAddToPlaylist;
+
+  // 🔹 피드 전용 subtitle (예: "chaewon님이 Gym에 추가했어요")
+  final String? subtitleOverride;
+
+  /// 🔥 Firestore feed_events 전용 생성자
+  factory TrackFeedCard.fromFeedEvent({
+    required String actorUsername,
+    required String playlistName,
+    required String trackTitle,
+    required String artistName,
+    required String albumImageUrl,
+  }) {
+    return TrackFeedCard(
+      feedItem: FeedItem(
+        id: 'feed', // 피드용 더미 ID
+        trackId: '',
+        trackTitle: trackTitle,
+        artistName: artistName,
+        albumImageUrl: albumImageUrl,
+        spotifyTrackId: '',
+        addedByUid: '',
+        addedByHandle: actorUsername,
+        addedByProfileImageUrl: null,
+      ),
+      onAddToPlaylist: null, // 피드에서는 버튼 비활성
+      subtitleOverride: '$actorUsername님이 $playlistName에 추가했어요',
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final ColorScheme colors = Theme.of(context).colorScheme;
     final TextTheme textTheme = Theme.of(context).textTheme;
     final String handle = feedItem.addedByHandle;
+
+    final String subtitleText = subtitleOverride ?? feedItem.artistName;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 12, 14),
@@ -78,7 +109,7 @@ class TrackFeedCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      feedItem.artistName,
+                      subtitleText,
                       style: textTheme.bodySmall?.copyWith(
                         color: colors.onSurfaceVariant,
                       ),
@@ -86,12 +117,13 @@ class TrackFeedCard extends StatelessWidget {
                   ],
                 ),
               ),
-              IconButton(
-                onPressed: onAddToPlaylist,
-                icon: const Icon(Icons.playlist_add),
-                padding: const EdgeInsets.only(left: 12, right: 4),
-                tooltip: 'Add to playlist',
-              ),
+              if (onAddToPlaylist != null)
+                IconButton(
+                  onPressed: onAddToPlaylist,
+                  icon: const Icon(Icons.playlist_add),
+                  padding: const EdgeInsets.only(left: 12, right: 4),
+                  tooltip: 'Add to playlist',
+                ),
             ],
           ),
         ],
@@ -101,10 +133,7 @@ class TrackFeedCard extends StatelessWidget {
 }
 
 class _ProfileAvatar extends StatelessWidget {
-  const _ProfileAvatar({
-    required this.imageUrl,
-    required this.handle,
-  });
+  const _ProfileAvatar({required this.imageUrl, required this.handle});
 
   final String? imageUrl;
   final String handle;
@@ -123,10 +152,7 @@ class _ProfileAvatar extends StatelessWidget {
           ? NetworkImage(imageUrl!)
           : null,
       child: (imageUrl == null || imageUrl!.isEmpty)
-          ? Text(
-              initial,
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            )
+          ? Text(initial, style: const TextStyle(fontWeight: FontWeight.w600))
           : null,
     );
   }

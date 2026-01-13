@@ -1,6 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../data/services/playlist_service.dart';
+
+/* =========================
+   Models
+========================= */
+
 class Track {
   const Track({
     required this.id,
@@ -48,6 +54,10 @@ class Playlist {
   final List<String> trackIds;
 }
 
+/* =========================
+   Onboarding
+========================= */
+
 class OnboardingState {
   const OnboardingState({
     required this.completed,
@@ -70,9 +80,7 @@ class OnboardingController extends ChangeNotifier {
   OnboardingState get state => _state;
 
   bool get completed => _state.completed;
-
   String get username => _state.username;
-
   List<String> get selectedGenres =>
       List<String>.unmodifiable(_state.selectedGenres);
 
@@ -94,6 +102,10 @@ class OnboardingController extends ChangeNotifier {
   }
 }
 
+/* =========================
+   AppState (핵심)
+========================= */
+
 class AppState extends ChangeNotifier {
   AppState() {
     onboarding.addListener(notifyListeners);
@@ -102,20 +114,24 @@ class AppState extends ChangeNotifier {
   final OnboardingController onboarding = OnboardingController();
 
   String? _uid;
-
   String? get uid => _uid;
 
-  void setUser(String uid) {
+  /* ===== 로그인 / 로그아웃 ===== */
+
+  Future<void> setUser(String uid) async {
     _uid = uid;
-    notifyListeners();
+    playlists.clear();
+    await loadPlaylists();
   }
 
   void clearUser() {
     _uid = null;
+    playlists.clear();
     notifyListeners();
   }
 
-  // ===== Firestore → AppState 동기화 (수정된 핵심 부분) =====
+  /* ===== Firestore → Onboarding ===== */
+
   void applyRemoteUser({
     required String username,
     required List<String> selectedGenres,
@@ -130,12 +146,12 @@ class AppState extends ChangeNotifier {
     );
   }
 
-  // ===== App startup 상태 =====
+  bool get onboardingCompleted => onboarding.completed;
   bool get isReady => true;
 
-  bool get onboardingCompleted => onboarding.completed;
-
-  int _playlistSeed = 4;
+  /* =========================
+     Static Track Catalog
+  ========================= */
 
   final List<Track> tracks = <Track>[
     const Track(
@@ -143,107 +159,50 @@ class AppState extends ChangeNotifier {
       title: 'Down Bad',
       artist: 'Taylor Swift',
       albumImage:
-          'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&auto=format&fit=crop',
+          'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800',
     ),
     const Track(
       id: 't2',
       title: 'High',
       artist: 'The Chainsmokers',
       albumImage:
-          'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=800&auto=format&fit=crop',
+          'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=800',
     ),
     const Track(
       id: 't3',
       title: 'Blue Lights',
       artist: 'Jorja Smith',
       albumImage:
-          'https://images.unsplash.com/photo-1485579149621-3123dd979885?w=800&auto=format&fit=crop',
+          'https://images.unsplash.com/photo-1485579149621-3123dd979885?w=800',
     ),
     const Track(
       id: 't4',
       title: 'Sunset Lover',
       artist: 'Petit Biscuit',
       albumImage:
-          'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&auto=format&fit=crop',
+          'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800',
     ),
     const Track(
       id: 't5',
       title: 'Electric',
       artist: 'Alina Baraz',
       albumImage:
-          'https://images.unsplash.com/photo-1507874457470-272b3c8d8ee2?w=800&auto=format&fit=crop',
+          'https://images.unsplash.com/photo-1507874457470-272b3c8d8ee2?w=800',
     ),
     const Track(
       id: 't6',
       title: 'Midnight City',
       artist: 'M83',
       albumImage:
-          'https://images.unsplash.com/photo-1516280440614-37939bbacd81?w=800&auto=format&fit=crop',
+          'https://images.unsplash.com/photo-1516280440614-37939bbacd81?w=800',
     ),
     const Track(
       id: 't7',
       title: 'Blinding Lights',
       artist: 'The Weeknd',
       albumImage:
-          'https://images.unsplash.com/photo-1495433324511-bf8e92934d90?w=800&auto=format&fit=crop',
+          'https://images.unsplash.com/photo-1495433324511-bf8e92934d90?w=800',
     ),
-  ];
-
-  final List<FeedItem> feedItems = <FeedItem>[
-    const FeedItem(
-      id: 'f1',
-      trackId: 't1',
-      trackTitle: 'Down Bad',
-      artistName: 'Taylor Swift',
-      albumImageUrl:
-          'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&auto=format&fit=crop',
-      spotifyTrackId: 'spotify:track:downbad',
-      addedByUid: 'u_chaewon',
-      addedByHandle: 'chaewon_gold',
-      addedByProfileImageUrl:
-          'https://images.unsplash.com/photo-1544723795-3fb6469f5b39?w=400&auto=format&fit=crop',
-    ),
-    const FeedItem(
-      id: 'f2',
-      trackId: 't3',
-      trackTitle: 'Blue Lights',
-      artistName: 'Jorja Smith',
-      albumImageUrl:
-          'https://images.unsplash.com/photo-1485579149621-3123dd979885?w=800&auto=format&fit=crop',
-      spotifyTrackId: 'spotify:track:bluelights',
-      addedByUid: 'u_min',
-      addedByHandle: 'min_sounds',
-    ),
-    const FeedItem(
-      id: 'f3',
-      trackId: 't4',
-      trackTitle: 'Sunset Lover',
-      artistName: 'Petit Biscuit',
-      albumImageUrl:
-          'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&auto=format&fit=crop',
-      spotifyTrackId: 'spotify:track:sunsetlover',
-      addedByUid: 'u_jae',
-      addedByHandle: 'jae.playlist',
-      addedByProfileImageUrl:
-          'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=400&auto=format&fit=crop',
-    ),
-    const FeedItem(
-      id: 'f4',
-      trackId: 't6',
-      trackTitle: 'Midnight City',
-      artistName: 'M83',
-      albumImageUrl:
-          'https://images.unsplash.com/photo-1516280440614-37939bbacd81?w=800&auto=format&fit=crop',
-      spotifyTrackId: 'spotify:track:midnightcity',
-      addedByUid: 'u_sora',
-      addedByHandle: 'sora_mixes',
-    ),
-  ];
-
-  final List<Playlist> playlists = <Playlist>[
-    Playlist(id: 'pl_1', name: 'Gym'),
-    Playlist(id: 'pl_2', name: 'Study'),
-    Playlist(id: 'pl_3', name: 'Chill'),
   ];
 
   Track? findTrackById(String trackId) {
@@ -253,6 +212,12 @@ class AppState extends ChangeNotifier {
     return null;
   }
 
+  /* =========================
+     Playlists (유저별)
+  ========================= */
+
+  final List<Playlist> playlists = <Playlist>[];
+
   Playlist? findPlaylistById(String playlistId) {
     for (final playlist in playlists) {
       if (playlist.id == playlistId) return playlist;
@@ -260,41 +225,75 @@ class AppState extends ChangeNotifier {
     return null;
   }
 
-  Playlist addTrackToNewPlaylist({
-    required String name,
-    required String trackId,
-  }) {
-    final playlist = Playlist(
-      id: 'pl_${_playlistSeed++}',
-      name: name,
-      trackIds: <String>[trackId],
-    );
-    playlists.add(playlist);
+  Future<void> loadPlaylists() async {
+    if (_uid == null) return;
+
+    final service = PlaylistService(uid: _uid!);
+    final remote = await service.fetchPlaylists();
+
+    playlists
+      ..clear()
+      ..addAll(
+        remote.map(
+          (p) => Playlist(id: p.id, name: p.name, trackIds: p.trackIds),
+        ),
+      );
+
     notifyListeners();
-    return playlist;
   }
 
-  bool addTrackToPlaylist({
+  Future<void> addTrackToNewPlaylist({
+    required String name,
+    required String trackId,
+  }) async {
+    final service = PlaylistService(uid: _uid!);
+
+    final created = await service.createPlaylist(
+      name: name,
+      trackIds: [trackId],
+    );
+
+    playlists.add(
+      Playlist(id: created.id, name: created.name, trackIds: created.trackIds),
+    );
+
+    notifyListeners();
+  }
+
+  Future<bool> addTrackToPlaylist({
     required String playlistId,
     required String trackId,
-  }) {
+  }) async {
     final playlist = playlists.firstWhere((p) => p.id == playlistId);
     if (playlist.trackIds.contains(trackId)) return false;
+
+    final service = PlaylistService(uid: _uid!);
+    await service.addTrack(playlistId: playlistId, trackId: trackId);
+
     playlist.trackIds.add(trackId);
     notifyListeners();
     return true;
   }
 
-  bool removeTrackFromPlaylist({
+  Future<bool> removeTrackFromPlaylist({
     required String playlistId,
     required String trackId,
-  }) {
+  }) async {
     final playlist = playlists.firstWhere((p) => p.id == playlistId);
-    final removed = playlist.trackIds.remove(trackId);
-    if (removed) notifyListeners();
-    return removed;
+    if (!playlist.trackIds.contains(trackId)) return false;
+
+    final service = PlaylistService(uid: _uid!);
+    await service.removeTrack(playlistId: playlistId, trackId: trackId);
+
+    playlist.trackIds.remove(trackId);
+    notifyListeners();
+    return true;
   }
 }
+
+/* =========================
+   AppStateScope
+========================= */
 
 class AppStateScope extends InheritedNotifier<AppState> {
   const AppStateScope({
