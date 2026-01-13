@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../data/services/playlist_service.dart';
+import '../data/services/track_service.dart';
 
 /* =========================
    Models
@@ -121,6 +122,7 @@ class AppState extends ChangeNotifier {
   Future<void> setUser(String uid) async {
     _uid = uid;
     playlists.clear();
+    await TrackService().seedDummyTracksIfEmpty();
     await loadPlaylists();
   }
 
