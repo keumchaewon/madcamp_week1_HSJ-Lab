@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 class TimelineScreen extends StatefulWidget {
   const TimelineScreen({super.key});
@@ -14,7 +14,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
       title: 'Here Comes The Sun',
       artist: 'The Beatles',
       date: DateTime(2025, 6, 20),
-      memo: '가족과 함께 떠난 제주도 여행, 아침 해변을 걸으며 들었던 곡.',
+      memo: '좋아하는 Beatles 노래 중 하나',
       imageUrl:
           'https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&w=800&q=80',
     ),
@@ -23,7 +23,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
       title: 'Someone Like You',
       artist: 'Adele',
       date: DateTime(2024, 2, 14),
-      memo: '작은 카페에서 혼자 들었던 밤의 기억.',
+      memo: '전 연인을 생각나게 하는 노래',
       imageUrl:
           'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80',
     ),
@@ -45,189 +45,38 @@ class _TimelineScreenState extends State<TimelineScreen> {
   }
 
   Future<void> _openEntryEditor({TimelineEntry? entry}) async {
-    final titleController = TextEditingController(text: entry?.title ?? '');
-    final artistController = TextEditingController(text: entry?.artist ?? '');
-    final memoController = TextEditingController(text: entry?.memo ?? '');
-    final dateController = TextEditingController(
-      text: entry?.date == null ? '' : _formatDate(entry!.date),
-    );
-    DateTime? selectedDate = entry?.date;
-
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return Dialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: LinearGradient(
-                              colors: [Color(0xFF9B5DE5), Color(0xFFFF6FAE)],
-                            ),
-                          ),
-                          child: const Icon(Icons.add, color: Colors.white),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            entry == null ? '타임라인에 곡 추가' : '타임라인 수정',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: () => Navigator.of(dialogContext).pop(),
-                          icon: const Icon(Icons.close),
-                          splashRadius: 20,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    _LabeledField(
-                      label: '곡 제목',
-                      child: TextField(
-                        controller: titleController,
-                        decoration: _inputDecoration('예: Bohemian Rhapsody'),
-                      ),
-                    ),
-                    _LabeledField(
-                      label: '아티스트',
-                      child: TextField(
-                        controller: artistController,
-                        decoration: _inputDecoration('예: Queen'),
-                      ),
-                    ),
-                    _LabeledField(
-                      label: '날짜',
-                      child: TextField(
-                        controller: dateController,
-                        readOnly: true,
-                        onTap: () async {
-                          final now = DateTime.now();
-                          final picked = await showDatePicker(
-                            context: context,
-                            initialDate: selectedDate ?? now,
-                            firstDate: DateTime(2000),
-                            lastDate: DateTime(now.year + 3),
-                          );
-                          if (picked != null) {
-                            setModalState(() {
-                              selectedDate = picked;
-                              dateController.text = _formatDate(picked);
-                            });
-                          }
-                        },
-                        decoration: _inputDecoration('연도. 월. 일.').copyWith(
-                          suffixIcon: const Icon(Icons.calendar_today),
-                        ),
-                      ),
-                    ),
-                    _LabeledField(
-                      label: '추억 메모',
-                      child: TextField(
-                        controller: memoController,
-                        minLines: 3,
-                        maxLines: 4,
-                        decoration: _inputDecoration(
-                          '이 곡과 함께한 특별한 순간을 기록해보세요...',
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () => Navigator.of(dialogContext).pop(),
-                            style: OutlinedButton.styleFrom(
-                              minimumSize: const Size.fromHeight(44),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                            ),
-                            child: const Text('취소'),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () {
-                              if (titleController.text.trim().isEmpty ||
-                                  artistController.text.trim().isEmpty ||
-                                  selectedDate == null) {
-                                ScaffoldMessenger.of(this.context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('제목, 아티스트, 날짜를 입력해 주세요.'),
-                                  ),
-                                );
-                                return;
-                              }
-                              setState(() {
-                                if (entry == null) {
-                                  _items.add(
-                                    TimelineEntry(
-                                      id: DateTime.now()
-                                          .millisecondsSinceEpoch
-                                          .toString(),
-                                      title: titleController.text.trim(),
-                                      artist: artistController.text.trim(),
-                                      date: selectedDate!,
-                                      memo: memoController.text.trim(),
-                                      imageUrl:
-                                          'https://images.unsplash.com/photo-1453090927415-5f45085b65c0?auto=format&fit=crop&w=800&q=80',
-                                    ),
-                                  );
-                                } else {
-                                  entry
-                                    ..title = titleController.text.trim()
-                                    ..artist = artistController.text.trim()
-                                    ..date = selectedDate!
-                                    ..memo = memoController.text.trim();
-                                }
-                              });
-                              Navigator.of(dialogContext).pop();
-                            },
-                            style: ElevatedButton.styleFrom(
-                              minimumSize: const Size.fromHeight(44),
-                              backgroundColor: const Color(0xFF7C3AED),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                            ),
-                            child: Text(entry == null ? '추가' : '저장'),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            );
+        return _TimelineEditorDialog(
+          entry: entry,
+          onSave: (title, artist, date, memo) {
+            setState(() {
+              if (entry == null) {
+                _items.add(
+                  TimelineEntry(
+                    id: DateTime.now().millisecondsSinceEpoch.toString(),
+                    title: title,
+                    artist: artist,
+                    date: date,
+                    memo: memo,
+                    imageUrl:
+                        'https://images.unsplash.com/photo-1453090927415-5f45085b65c0?auto=format&fit=crop&w=800&q=80',
+                  ),
+                );
+              } else {
+                entry
+                  ..title = title
+                  ..artist = artist
+                  ..date = date
+                  ..memo = memo;
+              }
+            });
           },
         );
       },
     );
-
-    titleController.dispose();
-    artistController.dispose();
-    memoController.dispose();
-    dateController.dispose();
   }
 
   Future<void> _openDetail(TimelineEntry entry) async {
@@ -235,7 +84,10 @@ class _TimelineScreenState extends State<TimelineScreen> {
       context: context,
       builder: (dialogContext) {
         return Dialog(
-          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 24,
+          ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(22),
           ),
@@ -250,7 +102,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
                     const Expanded(
                       child: Center(
                         child: Text(
-                          '곡 상세 정보',
+                          '怨??곸꽭 ?뺣낫',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
@@ -276,10 +128,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                _IconText(
-                  icon: Icons.music_note,
-                  text: entry.artist,
-                ),
+                _IconText(icon: Icons.music_note, text: entry.artist),
                 const SizedBox(height: 6),
                 _IconText(
                   icon: Icons.calendar_today,
@@ -297,7 +146,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        '추억 메모',
+                        '異붿뼲 硫붾え',
                         style: TextStyle(
                           fontWeight: FontWeight.w700,
                           color: Color(0xFF6B7280),
@@ -305,7 +154,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        entry.memo.isEmpty ? '메모가 없어요.' : entry.memo,
+                        entry.memo.isEmpty ? '硫붾え媛 ?놁뼱??' : entry.memo,
                         style: const TextStyle(color: Color(0xFF4B5563)),
                       ),
                     ],
@@ -326,7 +175,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
                       ),
                     ),
                     icon: const Icon(Icons.edit),
-                    label: const Text('수정'),
+                    label: const Text('?섏젙'),
                   ),
                 ),
               ],
@@ -346,22 +195,19 @@ class _TimelineScreenState extends State<TimelineScreen> {
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
           child: Column(
             children: [
-              _TimelineHeader(
-                onAdd: () => _openEntryEditor(),
-              ),
+              _TimelineHeader(onAdd: () => _openEntryEditor()),
               const SizedBox(height: 20),
               Expanded(
                 child: _sortedItems.isEmpty
                     ? const Center(
                         child: Text(
-                          '아직 타임라인에 추가된 곡이 없어요.',
+                          '?꾩쭅 ??꾨씪?몄뿉 異붽???怨≪씠 ?놁뼱??',
                           style: TextStyle(color: Color(0xFF9CA3AF)),
                         ),
                       )
                     : ListView.separated(
                         itemCount: _sortedItems.length,
-                        separatorBuilder: (_, __) =>
-                            const SizedBox(height: 16),
+                        separatorBuilder: (_, __) => const SizedBox(height: 16),
                         itemBuilder: (context, index) {
                           final item = _sortedItems[index];
                           return _TimelineTile(
@@ -395,6 +241,194 @@ class TimelineEntry {
   DateTime date;
   String memo;
   final String imageUrl;
+}
+
+class _TimelineEditorDialog extends StatefulWidget {
+  const _TimelineEditorDialog({this.entry, required this.onSave});
+
+  final TimelineEntry? entry;
+  final void Function(String title, String artist, DateTime date, String memo)
+  onSave;
+
+  @override
+  State<_TimelineEditorDialog> createState() => _TimelineEditorDialogState();
+}
+
+class _TimelineEditorDialogState extends State<_TimelineEditorDialog> {
+  late final TextEditingController titleController;
+  late final TextEditingController artistController;
+  late final TextEditingController memoController;
+  late final TextEditingController dateController;
+  DateTime? selectedDate;
+
+  @override
+  void initState() {
+    super.initState();
+    titleController = TextEditingController(text: widget.entry?.title ?? '');
+    artistController = TextEditingController(text: widget.entry?.artist ?? '');
+    memoController = TextEditingController(text: widget.entry?.memo ?? '');
+    selectedDate = widget.entry?.date;
+    dateController = TextEditingController(
+      text: selectedDate == null ? '' : _formatDate(selectedDate!),
+    );
+  }
+
+  @override
+  void dispose() {
+    titleController.dispose();
+    artistController.dispose();
+    memoController.dispose();
+    dateController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final entry = widget.entry;
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF9B5DE5), Color(0xFFFF6FAE)],
+                    ),
+                  ),
+                  child: const Icon(Icons.add, color: Colors.white),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    entry == null
+                        ? 'Add timeline entry'
+                        : 'Edit timeline entry',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.close),
+                  splashRadius: 20,
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _LabeledField(
+              label: 'Title',
+              child: TextField(
+                controller: titleController,
+                decoration: _inputDecoration('e.g. Bohemian Rhapsody'),
+              ),
+            ),
+            _LabeledField(
+              label: 'Artist',
+              child: TextField(
+                controller: artistController,
+                decoration: _inputDecoration('e.g. Queen'),
+              ),
+            ),
+            _LabeledField(
+              label: 'Date',
+              child: TextField(
+                controller: dateController,
+                readOnly: true,
+                onTap: () async {
+                  final now = DateTime.now();
+                  final picked = await showDatePicker(
+                    context: context,
+                    initialDate: selectedDate ?? now,
+                    firstDate: DateTime(2000),
+                    lastDate: DateTime(now.year + 3),
+                  );
+                  if (picked != null) {
+                    setState(() {
+                      selectedDate = picked;
+                      dateController.text = _formatDate(picked);
+                    });
+                  }
+                },
+                decoration: _inputDecoration(
+                  'YYYY.MM.DD',
+                ).copyWith(suffixIcon: const Icon(Icons.calendar_today)),
+              ),
+            ),
+            _LabeledField(
+              label: 'Memo',
+              child: TextField(
+                controller: memoController,
+                minLines: 3,
+                maxLines: 4,
+                decoration: _inputDecoration('Add a short memory...'),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(44),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    child: const Text('Cancel'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (titleController.text.trim().isEmpty ||
+                          artistController.text.trim().isEmpty ||
+                          selectedDate == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Please enter title, artist, and date.',
+                            ),
+                          ),
+                        );
+                        return;
+                      }
+                      widget.onSave(
+                        titleController.text.trim(),
+                        artistController.text.trim(),
+                        selectedDate!,
+                        memoController.text.trim(),
+                      );
+                      Navigator.of(context).pop();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(44),
+                      backgroundColor: const Color(0xFF7C3AED),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    child: Text(entry == null ? 'Add' : 'Save'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _TimelineHeader extends StatelessWidget {
@@ -438,7 +472,7 @@ class _TimelineHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: const [
                 Text(
-                  '나의 음악 타임라인',
+                  'timeline 482번째줄쯤에 있음',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
@@ -447,13 +481,12 @@ class _TimelineHeader extends StatelessWidget {
                 ),
                 SizedBox(height: 6),
                 Text(
-                  '특별한 순간과 함께한 노래들',
-                  style: TextStyle(fontSize: 12, color: Color(0xFF9CA3AF)),
+                  'timeline 491번째줄쯤에 있음, style: TextStyle(fontSize: 12, color: Color(0xFF9CA3AF)),',
                 ),
               ],
             ),
           ),
-          _GradientButton(label: '+ 추가', onTap: onAdd),
+          _GradientButton(label: '+ 異붽?', onTap: onAdd),
         ],
       ),
     );
@@ -468,14 +501,16 @@ class _TimelineTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return IntrinsicHeight( // 핵심: Row 높이를 자식 카드 높이에 맞춤
+    return IntrinsicHeight(
+      // ?듭떖: Row ?믪씠瑜??먯떇 移대뱶 ?믪씠??留욎땄
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch, // 핵심: 왼쪽 라인이 세로로 늘어날 수 있게
+        crossAxisAlignment:
+            CrossAxisAlignment.stretch, // ?듭떖: ?쇱そ ?쇱씤???몃줈濡??섏뼱?????덇쾶
         children: [
           SizedBox(
             width: 28,
             child: Stack(
-              fit: StackFit.expand, // 핵심: Stack 자체가 주어진 높이를 확실히 채움
+              fit: StackFit.expand, // ?듭떖: Stack ?먯껜媛 二쇱뼱吏??믪씠瑜??뺤떎??梨꾩?
               children: [
                 Align(
                   alignment: Alignment.center,
@@ -488,7 +523,7 @@ class _TimelineTile extends StatelessWidget {
                   ),
                 ),
                 Align(
-                  // top: 18 같은 절대값 대신 상대 위치로
+                  // top: 18 媛숈? ?덈?媛?????곷? ?꾩튂濡?
                   alignment: const Alignment(-0.1, -0.6),
                   child: Container(
                     width: 12,
@@ -534,7 +569,7 @@ class _TimelineTile extends StatelessWidget {
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min, // 안정성 강화
+                        mainAxisSize: MainAxisSize.min, // ?덉젙??媛뺥솕
                         children: [
                           Text(
                             entry.title,
@@ -570,7 +605,6 @@ class _TimelineTile extends StatelessWidget {
     );
   }
 }
-
 
 class _AlbumImage extends StatelessWidget {
   const _AlbumImage({required this.url});
@@ -696,10 +730,7 @@ class _LabeledField extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: const TextStyle(fontWeight: FontWeight.w700),
-          ),
+          Text(label, style: const TextStyle(fontWeight: FontWeight.w700)),
           const SizedBox(height: 8),
           child,
         ],
