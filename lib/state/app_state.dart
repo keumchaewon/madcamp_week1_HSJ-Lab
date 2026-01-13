@@ -39,7 +39,6 @@ class FeedItem {
   final String? addedByProfileImageUrl;
 }
 
-
 class Playlist {
   Playlist({required this.id, required this.name, List<String>? trackIds})
     : trackIds = trackIds ?? <String>[];
@@ -77,6 +76,11 @@ class OnboardingController extends ChangeNotifier {
   List<String> get selectedGenres =>
       List<String>.unmodifiable(_state.selectedGenres);
 
+  void setState(OnboardingState state) {
+    _state = state;
+    notifyListeners();
+  }
+
   void complete({
     required String username,
     required List<String> selectedGenres,
@@ -111,23 +115,24 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ===== Firestore → AppState 동기화 =====
+  // ===== Firestore → AppState 동기화 (수정된 핵심 부분) =====
   void applyRemoteUser({
     required String username,
     required List<String> selectedGenres,
     required bool onboardingCompleted,
   }) {
-    if (onboardingCompleted) {
-      onboarding.complete(username: username, selectedGenres: selectedGenres);
-    }
+    onboarding.setState(
+      OnboardingState(
+        completed: onboardingCompleted,
+        username: username,
+        selectedGenres: List<String>.from(selectedGenres),
+      ),
+    );
   }
 
   // ===== App startup 상태 =====
-
-  // 앱이 초기화 완료되었는지
   bool get isReady => true;
 
-  // 온보딩 완료 여부 (main.dart에서 사용 중)
   bool get onboardingCompleted => onboarding.completed;
 
   int _playlistSeed = 4;
@@ -184,106 +189,56 @@ class AppState extends ChangeNotifier {
     ),
   ];
 
-    final List<FeedItem> feedItems = <FeedItem>[
-
+  final List<FeedItem> feedItems = <FeedItem>[
     const FeedItem(
-
       id: 'f1',
-
       trackId: 't1',
-
       trackTitle: 'Down Bad',
-
       artistName: 'Taylor Swift',
-
       albumImageUrl:
-
           'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&auto=format&fit=crop',
-
       spotifyTrackId: 'spotify:track:downbad',
-
       addedByUid: 'u_chaewon',
-
       addedByHandle: 'chaewon_gold',
-
       addedByProfileImageUrl:
-
           'https://images.unsplash.com/photo-1544723795-3fb6469f5b39?w=400&auto=format&fit=crop',
-
     ),
-
     const FeedItem(
-
       id: 'f2',
-
       trackId: 't3',
-
       trackTitle: 'Blue Lights',
-
       artistName: 'Jorja Smith',
-
       albumImageUrl:
-
           'https://images.unsplash.com/photo-1485579149621-3123dd979885?w=800&auto=format&fit=crop',
-
       spotifyTrackId: 'spotify:track:bluelights',
-
       addedByUid: 'u_min',
-
       addedByHandle: 'min_sounds',
-
     ),
-
     const FeedItem(
-
       id: 'f3',
-
       trackId: 't4',
-
       trackTitle: 'Sunset Lover',
-
       artistName: 'Petit Biscuit',
-
       albumImageUrl:
-
           'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&auto=format&fit=crop',
-
       spotifyTrackId: 'spotify:track:sunsetlover',
-
       addedByUid: 'u_jae',
-
       addedByHandle: 'jae.playlist',
-
       addedByProfileImageUrl:
-
           'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=400&auto=format&fit=crop',
-
     ),
-
     const FeedItem(
-
       id: 'f4',
-
       trackId: 't6',
-
       trackTitle: 'Midnight City',
-
       artistName: 'M83',
-
       albumImageUrl:
-
           'https://images.unsplash.com/photo-1516280440614-37939bbacd81?w=800&auto=format&fit=crop',
-
       spotifyTrackId: 'spotify:track:midnightcity',
-
       addedByUid: 'u_sora',
-
       addedByHandle: 'sora_mixes',
-
     ),
-
   ];
-
 
   final List<Playlist> playlists = <Playlist>[
     Playlist(id: 'pl_1', name: 'Gym'),
@@ -293,18 +248,14 @@ class AppState extends ChangeNotifier {
 
   Track? findTrackById(String trackId) {
     for (final track in tracks) {
-      if (track.id == trackId) {
-        return track;
-      }
+      if (track.id == trackId) return track;
     }
     return null;
   }
 
   Playlist? findPlaylistById(String playlistId) {
     for (final playlist in playlists) {
-      if (playlist.id == playlistId) {
-        return playlist;
-      }
+      if (playlist.id == playlistId) return playlist;
     }
     return null;
   }
@@ -327,10 +278,8 @@ class AppState extends ChangeNotifier {
     required String playlistId,
     required String trackId,
   }) {
-    final playlist = playlists.firstWhere((item) => item.id == playlistId);
-    if (playlist.trackIds.contains(trackId)) {
-      return false;
-    }
+    final playlist = playlists.firstWhere((p) => p.id == playlistId);
+    if (playlist.trackIds.contains(trackId)) return false;
     playlist.trackIds.add(trackId);
     notifyListeners();
     return true;
@@ -340,11 +289,9 @@ class AppState extends ChangeNotifier {
     required String playlistId,
     required String trackId,
   }) {
-    final playlist = playlists.firstWhere((item) => item.id == playlistId);
-    final bool removed = playlist.trackIds.remove(trackId);
-    if (removed) {
-      notifyListeners();
-    }
+    final playlist = playlists.firstWhere((p) => p.id == playlistId);
+    final removed = playlist.trackIds.remove(trackId);
+    if (removed) notifyListeners();
     return removed;
   }
 }
@@ -357,8 +304,7 @@ class AppStateScope extends InheritedNotifier<AppState> {
   }) : super(notifier: appState, child: child);
 
   static AppState of(BuildContext context) {
-    final AppStateScope? scope = context
-        .dependOnInheritedWidgetOfExactType<AppStateScope>();
+    final scope = context.dependOnInheritedWidgetOfExactType<AppStateScope>();
     assert(scope != null, 'AppStateScope not found in widget tree.');
     return scope!.notifier!;
   }
