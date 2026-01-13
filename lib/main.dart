@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'firebase_options.dart';
 import './ui/screens/onboarding/onboarding_flow.dart';
@@ -65,6 +66,25 @@ class AuthGate extends StatelessWidget {
 
         // 로그인 되어 있음
         if (snapshot.hasData) {
+          final user = snapshot.data!;
+          final appState = AppStateScope.of(context);
+
+          WidgetsBinding.instance.addPostFrameCallback((_) async {
+            print('🔥 AUTH UID: ${user.uid}');
+
+            appState.setUser(user.uid);
+
+            await FirebaseFirestore.instance
+                .collection('users')
+                .doc(user.uid)
+                .set({
+                  'onboardingCompleted': false,
+                  'createdAt': FieldValue.serverTimestamp(),
+                }, SetOptions(merge: true));
+
+            print('✅ FIRESTORE WRITE DONE');
+          });
+
           return const AppEntry();
         }
 
