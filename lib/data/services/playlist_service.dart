@@ -23,6 +23,10 @@ class PlaylistService {
     return snapshot.docs.map((doc) => UserPlaylist.fromDoc(doc)).toList();
   }
 
+  Stream<int> watchPlaylistCount() {
+    return _playlistRef.snapshots().map((snapshot) => snapshot.docs.length);
+  }
+
   // =========================
   // 플레이리스트 생성
   // =========================
