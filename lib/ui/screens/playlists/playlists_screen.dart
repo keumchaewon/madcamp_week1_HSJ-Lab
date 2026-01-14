@@ -11,9 +11,7 @@ class PlaylistsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Playlists'),
-      ),
+      appBar: AppBar(title: const Text('Playlists')),
       body: const PlaylistsGrid(),
     );
   }
@@ -45,17 +43,11 @@ class PlaylistsGrid extends StatelessWidget {
             Icon(Icons.queue_music, size: 48, color: Color(0xFF94A3B8)),
             SizedBox(height: 12),
             Text(
-              'No playlists yet',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              '플레이리스트가 없습니다',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             SizedBox(height: 6),
-            Text(
-              'Create from feed',
-              style: TextStyle(color: Color(0xFF94A3B8)),
-            ),
+            Text('음악을 추가해보세요!', style: TextStyle(color: Color(0xFF94A3B8))),
           ],
         ),
       );
@@ -78,8 +70,8 @@ class PlaylistsGrid extends StatelessWidget {
           final String? coverImageUrl = playlist.trackIds.isEmpty
               ? null
               : trackRepository
-                  .getTrackById(playlist.trackIds.first)
-                  ?.albumImageUrl;
+                    .getTrackById(playlist.trackIds.first)
+                    ?.albumImageUrl;
 
           return PlaylistGridTile(
             name: playlist.name,
@@ -88,9 +80,7 @@ class PlaylistsGrid extends StatelessWidget {
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute<void>(
-                  builder: (_) => PlaylistDetailScreen(
-                    playlistId: playlist.id,
-                  ),
+                  builder: (_) => PlaylistDetailScreen(playlistId: playlist.id),
                 ),
               );
             },

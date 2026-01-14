@@ -83,7 +83,22 @@ class _FeedScreenState extends State<FeedScreen> {
                       return const Center(child: CircularProgressIndicator());
                     }
 
-                    if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    if (!snapshot.hasData) {
+                      return const Center(
+                        child: Text(
+                          '아직 피드가 없어요.',
+                          style: TextStyle(color: Color(0xFF94A3B8)),
+                        ),
+                      );
+                    }
+
+                    final myUid = appState.uid;
+                    final docs = snapshot.data!.docs.where((doc) {
+                      final data = doc.data() as Map<String, dynamic>;
+                      return data['actorUid'] != myUid;
+                    }).toList();
+
+                    if (docs.isEmpty) {
                       return const Center(
                         child: Text(
                           '아직 피드가 없어요.',
@@ -94,12 +109,11 @@ class _FeedScreenState extends State<FeedScreen> {
 
                     return ListView.separated(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                      itemCount: snapshot.data!.docs.length,
+                      itemCount: docs.length,
                       separatorBuilder: (_, __) => const SizedBox(height: 12),
                       itemBuilder: (context, index) {
                         final data =
-                            snapshot.data!.docs[index].data()!
-                                as Map<String, dynamic>;
+                            docs[index].data()! as Map<String, dynamic>;
 
                         return TrackFeedCard.fromFeedEvent(
                           actorUsername: data['actorUsername'],

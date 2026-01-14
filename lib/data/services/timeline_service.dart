@@ -78,12 +78,16 @@ class TimelineService {
     required String artist,
     required DateTime date,
     required String memo,
+    String? imageUrl,
+    String? trackId,
   }) async {
     await _ref.doc(entryId).update({
       'title': title,
       'artist': artist,
       'date': Timestamp.fromDate(date),
       'memo': memo,
+      if (imageUrl != null) 'imageUrl': imageUrl,
+      if (trackId != null) 'trackId': trackId,
     });
   }
 
