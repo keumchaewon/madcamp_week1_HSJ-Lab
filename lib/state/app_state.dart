@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../data/services/feed_event_service.dart';
 import '../data/services/playlist_service.dart';
 import '../data/services/track_service.dart';
 
@@ -278,7 +279,7 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  Future<void> addTrackToNewPlaylist({
+  Future<Playlist> addTrackToNewPlaylist({
     required String name,
     required String trackId,
   }) async {
@@ -289,11 +290,15 @@ class AppState extends ChangeNotifier {
       trackIds: [trackId],
     );
 
-    playlists.add(
-      Playlist(id: created.id, name: created.name, trackIds: created.trackIds),
+    final playlist = Playlist(
+      id: created.id,
+      name: created.name,
+      trackIds: created.trackIds,
     );
+    playlists.add(playlist);
 
     notifyListeners();
+    return playlist;
   }
 
   Future<bool> addTrackToPlaylist({
@@ -305,6 +310,20 @@ class AppState extends ChangeNotifier {
 
     final service = PlaylistService(uid: _uid!);
     await service.addTrack(playlistId: playlistId, trackId: trackId);
+
+    final track = findTrackById(trackId);
+    if (track != null) {
+      await FeedEventService.createAddTrackEvent(
+        actorUid: _uid!,
+        actorUsername: onboarding.username,
+        playlistId: playlist.id,
+        playlistName: playlist.name,
+        trackId: track.id,
+        trackTitle: track.title,
+        artistName: track.artist,
+        albumImageUrl: track.albumImage,
+      );
+    }
 
     playlist.trackIds.add(trackId);
     notifyListeners();

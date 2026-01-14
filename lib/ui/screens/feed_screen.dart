@@ -158,25 +158,10 @@ class _AddToPlaylistSheetState extends State<_AddToPlaylistSheet> {
       return;
     }
 
-    await widget.appState.addTrackToNewPlaylist(
+    final playlist = await widget.appState.addTrackToNewPlaylist(
       name: name,
       trackId: widget.track.id,
     );
-
-    _showSnackBar('"$name"에 추가했어요.');
-    if (mounted) Navigator.of(context).pop();
-  }
-
-  Future<void> _handleAddToPlaylist(Playlist playlist) async {
-    final bool added = await widget.appState.addTrackToPlaylist(
-      playlistId: playlist.id,
-      trackId: widget.track.id,
-    );
-
-    if (!added) {
-      _showSnackBar('이미 추가된 곡이에요.');
-      return;
-    }
 
     await FeedEventService.createAddTrackEvent(
       actorUid: widget.appState.uid!,
@@ -188,6 +173,36 @@ class _AddToPlaylistSheetState extends State<_AddToPlaylistSheet> {
       artistName: widget.track.artist,
       albumImageUrl: widget.track.albumImage,
     );
+
+    _showSnackBar('"$name"에 추가했어요.');
+    if (mounted) Navigator.of(context).pop();
+  }
+
+  Future<void> _handleAddToPlaylist(Playlist playlist) async {
+    debugPrint('[ADD_TRACK] start ${playlist.name}');
+    final bool added = await widget.appState.addTrackToPlaylist(
+      playlistId: playlist.id,
+      trackId: widget.track.id,
+    );
+
+    debugPrint('[ADD_TRACK] added=$added');
+    if (!added) {
+      _showSnackBar('이미 추가된 곡이에요.');
+      return;
+    }
+
+    debugPrint('[ADD_TRACK] creating feed event');
+    await FeedEventService.createAddTrackEvent(
+      actorUid: widget.appState.uid!,
+      actorUsername: widget.appState.onboarding.username,
+      playlistId: playlist.id,
+      playlistName: playlist.name,
+      trackId: widget.track.id,
+      trackTitle: widget.track.title,
+      artistName: widget.track.artist,
+      albumImageUrl: widget.track.albumImage,
+    );
+    debugPrint('[ADD_TRACK] feed event done');
 
     _showSnackBar('"${playlist.name}"에 추가했어요.');
     if (mounted) Navigator.of(context).pop();
