@@ -108,11 +108,11 @@ class OnboardingController extends ChangeNotifier {
 ========================= */
 
 class AppState extends ChangeNotifier {
-  AppState() {
-    onboarding.addListener(notifyListeners);
-  }
+  AppState();
 
   final OnboardingController onboarding = OnboardingController();
+  bool onboardingLoaded = false;
+  String? onboardingUid;
 
   String? _uid;
   String? get uid => _uid;
@@ -130,9 +130,9 @@ class AppState extends ChangeNotifier {
     try {
       _uid = uid;
       playlists.clear();
-      notifyListeners();
       await TrackService().seedDummyTracksIfEmpty();
       await loadPlaylists();
+      notifyListeners();
     } finally {
       _isUserInitializing = false;
     }
@@ -140,7 +140,16 @@ class AppState extends ChangeNotifier {
 
   void clearUser() {
     _uid = null;
+    onboardingUid = null;
+    onboardingLoaded = false;
     playlists.clear();
+    onboarding.setState(
+      const OnboardingState(
+        completed: false,
+        username: '',
+        selectedGenres: <String>[],
+      ),
+    );
     notifyListeners();
   }
 
@@ -158,6 +167,9 @@ class AppState extends ChangeNotifier {
         selectedGenres: List<String>.from(selectedGenres),
       ),
     );
+    onboardingUid = _uid;
+    onboardingLoaded = true;
+    notifyListeners();
   }
 
   bool get onboardingCompleted => onboarding.completed;

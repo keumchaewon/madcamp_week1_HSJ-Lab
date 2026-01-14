@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -29,7 +31,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    _appState = AppState(); // App 전체에서 단일 인스턴스
+    _appState = AppState();
   }
 
   @override
@@ -43,6 +45,9 @@ class _MyAppState extends State<MyApp> {
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
           useMaterial3: true,
         ),
+        routes: {
+          '/home': (_) => const AppShell(),
+        },
         home: const AuthGate(),
       ),
     );
@@ -50,7 +55,7 @@ class _MyAppState extends State<MyApp> {
 }
 
 /* =========================
-   AuthGate (핵심 수정)
+   AuthGate (진입 제어)
 ========================= */
 
 class AuthGate extends StatefulWidget {
@@ -61,36 +66,55 @@ class AuthGate extends StatefulWidget {
 }
 
 class _AuthGateState extends State<AuthGate> {
+  StreamSubscription<User?>? _authSub;
   String? _initializedUid;
+  User? _currentUser;
+  bool _authReady = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _authSub = FirebaseAuth.instance.authStateChanges().listen((user) async {
+      if (!mounted) return;
+      setState(() {
+        _authReady = true;
+        _currentUser = user;
+      });
+
+      final appState = AppStateScope.of(context);
+      if (user == null) {
+        if (_initializedUid == null) return;
+        _initializedUid = null;
+        appState.clearUser();
+        return;
+      }
+
+      if (_initializedUid != user.uid) {
+        _initializedUid = user.uid;
+        await _initializeUser(appState, user.uid);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _authSub?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
+    if (!_authReady) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
 
-        if (snapshot.hasData) {
-          final user = snapshot.data!;
-          final appState = AppStateScope.of(context);
+    if (_currentUser != null) {
+      return const AppEntry();
+    }
 
-          // UID가 바뀔 때만 초기화 (중복 실행 방지)
-          if (_initializedUid != user.uid) {
-            _initializedUid = user.uid;
-            _initializeUser(appState, user.uid);
-          }
-
-          return const AppEntry();
-        }
-
-        _initializedUid = null;
-        return const LoginGoogle();
-      },
-    );
+    return const LoginGoogle();
   }
 
   Future<void> _initializeUser(AppState appState, String uid) async {
@@ -100,11 +124,11 @@ class _AuthGateState extends State<AuthGate> {
     await service.ensureUserDoc(uid);
     final data = await service.getUser(uid);
 
-    if (data != null && data['username'] != null) {
+    if (data != null) {
       appState.applyRemoteUser(
-        username: data['username'],
+        username: (data['username'] as String?) ?? '',
         selectedGenres: List<String>.from(data['selectedGenres'] ?? const []),
-        onboardingCompleted: true,
+        onboardingCompleted: data['onboardingCompleted'] == true,
       );
     } else {
       appState.applyRemoteUser(
@@ -130,6 +154,12 @@ class AppEntry extends StatelessWidget {
     return AnimatedBuilder(
       animation: appState,
       builder: (context, _) {
+        if (!appState.onboardingLoaded ||
+            appState.onboardingUid != appState.uid) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
         return appState.onboardingCompleted
             ? const AppShell()
             : const OnboardingFlow();
