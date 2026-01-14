@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
+import '../screens/timeline_screen.dart';
 
 import '../screens/friends/friend_search_screen.dart';
 import '../screens/playlists/create_playlist_sheet.dart';
 import '../screens/playlists/playlists_screen.dart';
-import '../screens/timeline_screen.dart';
 import '../../data/repositories/playlist_repository.dart';
 import '../../data/services/friend_service.dart';
 import '../../data/services/playlist_service.dart';
+import '../../data/services/timeline_service.dart';
 import '../../state/app_state.dart';
+import '../widgets/timeline_entry_tile.dart';
 
 class MyPageScreen extends StatelessWidget {
   const MyPageScreen({super.key});
@@ -67,6 +69,9 @@ class MyPageScreen extends StatelessWidget {
     final Stream<int>? friendCountStream = uid == null
         ? null
         : FriendService(uid: uid).watchFriendCount();
+    final Stream<List<TimelineEntryDoc>>? timelineStream = uid == null
+        ? null
+        : TimelineService(uid: uid).watchEntries();
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -139,26 +144,42 @@ class MyPageScreen extends StatelessWidget {
                 child: InkWell(
                   borderRadius: BorderRadius.circular(radius),
                   onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const TimelineScreen()),
-                    );
+                    Navigator.of(
+                      context,
+                    ).push(MaterialPageRoute(builder: (_) => TimelineScreen()));
                   },
                   child: Container(
-                    height: 96,
                     width: double.infinity,
+                    padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: const Color(0xFFF4F5F7),
                       borderRadius: BorderRadius.circular(radius),
                     ),
-                    child: const Center(
-                      child: Text(
-                        'Timeline',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
+                    child: timelineStream == null
+                        ? const _TimelinePreviewPlaceholder()
+                        : StreamBuilder<List<TimelineEntryDoc>>(
+                            stream: timelineStream,
+                            builder: (context, snapshot) {
+                              if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                                return const _TimelinePreviewPlaceholder();
+                              }
+                              final entries = snapshot.data!;
+                              final preview = entries.take(1).toList();
+
+                              return Column(
+                                children: preview
+                                    .map(
+                                      (entry) => TimelineEntryTile(
+                                        title: entry.title,
+                                        artist: entry.artist,
+                                        date: entry.date,
+                                        imageUrl: entry.imageUrl,
+                                      ),
+                                    )
+                                    .toList(),
+                              );
+                            },
+                          ),
                   ),
                 ),
               ),
@@ -205,7 +226,7 @@ class MyPageScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
-                    'Playlists',
+                    '내 플레이리스트',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
                   ),
                   TextButton(
@@ -269,6 +290,20 @@ class _StatItem extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         child: child,
+      ),
+    );
+  }
+}
+
+class _TimelinePreviewPlaceholder extends StatelessWidget {
+  const _TimelinePreviewPlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Text(
+        'Timeline을 추가해보세요!',
+        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
       ),
     );
   }

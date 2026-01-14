@@ -1,6 +1,8 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
+import '../../data/services/timeline_service.dart';
 import '../../state/app_state.dart';
+import '../widgets/timeline_entry_tile.dart';
 
 class TimelineScreen extends StatefulWidget {
   const TimelineScreen({super.key});
@@ -19,7 +21,8 @@ class _TimelineScreenState extends State<TimelineScreen> {
   }
 
   Future<void> _openEntryEditor({TimelineEntry? entry}) async {
-    final tracks = AppStateScope.of(context).tracks;
+    final appState = AppStateScope.of(context);
+    final tracks = appState.tracks;
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -27,33 +30,75 @@ class _TimelineScreenState extends State<TimelineScreen> {
         return _TimelineEditorDialog(
           entry: entry,
           tracks: tracks,
-          onSave: (selectedTrack, date, memo) {
-            setState(() {
-              if (entry == null) {
-                _items.add(
-                  TimelineEntry(
-                    id: DateTime.now().millisecondsSinceEpoch.toString(),
-                    trackId: selectedTrack.id,
-                    title: selectedTrack.title,
-                    artist: selectedTrack.artist,
-                    date: date,
-                    memo: memo,
-                    imageUrl: selectedTrack.albumImage,
-                  ),
-                );
-              } else {
-                entry
-                  ..trackId = selectedTrack.id
-                  ..title = selectedTrack.title
-                  ..artist = selectedTrack.artist
-                  ..date = date
-                  ..memo = memo
-                  ..imageUrl = selectedTrack.albumImage;
-              }
-            });
+          onSave: (selectedTrack, date, memo) async {
+            await _saveEntry(
+              entry: entry,
+              selectedTrack: selectedTrack,
+              date: date,
+              memo: memo,
+            );
           },
         );
       },
+    );
+  }
+
+  Future<void> _saveEntry({
+    required Track selectedTrack,
+    required DateTime date,
+    required String memo,
+    TimelineEntry? entry,
+  }) async {
+    final appState = AppStateScope.of(context);
+    final uid = appState.uid;
+    if (uid == null) {
+      setState(() {
+        if (entry == null) {
+          _items.add(
+            TimelineEntry(
+              id: DateTime.now().millisecondsSinceEpoch.toString(),
+              trackId: selectedTrack.id,
+              title: selectedTrack.title,
+              artist: selectedTrack.artist,
+              date: date,
+              memo: memo,
+              imageUrl: selectedTrack.albumImage,
+            ),
+          );
+        } else {
+          entry
+            ..trackId = selectedTrack.id
+            ..title = selectedTrack.title
+            ..artist = selectedTrack.artist
+            ..date = date
+            ..memo = memo
+            ..imageUrl = selectedTrack.albumImage;
+        }
+      });
+      return;
+    }
+
+    final service = TimelineService(uid: uid);
+    if (entry == null) {
+      await service.createEntry(
+        title: selectedTrack.title,
+        artist: selectedTrack.artist,
+        date: date,
+        memo: memo,
+        imageUrl: selectedTrack.albumImage,
+        trackId: selectedTrack.id,
+      );
+      return;
+    }
+
+    await service.updateEntry(
+      entryId: entry.id,
+      title: selectedTrack.title,
+      artist: selectedTrack.artist,
+      date: date,
+      memo: memo,
+      imageUrl: selectedTrack.albumImage,
+      trackId: selectedTrack.id,
     );
   }
 
@@ -166,6 +211,10 @@ class _TimelineScreenState extends State<TimelineScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final appState = AppStateScope.of(context);
+    final uid = appState.uid;
+    final Stream<List<TimelineEntryDoc>>? timelineStream =
+        uid == null ? null : TimelineService(uid: uid).watchEntries();
     return Scaffold(
       backgroundColor: const Color(0xFFF8F7FB),
       body: SafeArea(
@@ -176,21 +225,68 @@ class _TimelineScreenState extends State<TimelineScreen> {
               _TimelineHeader(onAdd: () => _openEntryEditor()),
               const SizedBox(height: 20),
               Expanded(
-                child: _sortedItems.isEmpty
-                    ? const Center(
-                        child: Text(
-                          '나만의 음악 추가하기',
-                          style: TextStyle(color: Color(0xFF9CA3AF)),
-                        ),
-                      )
-                    : ListView.separated(
-                        itemCount: _sortedItems.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 16),
-                        itemBuilder: (context, index) {
-                          final item = _sortedItems[index];
-                          return _TimelineTile(
-                            entry: item,
-                            onTap: () => _openDetail(item),
+                child: timelineStream == null
+                    ? (_sortedItems.isEmpty
+                        ? const Center(
+                            child: Text(
+                              '나만의 음악 추가하기',
+                              style: TextStyle(color: Color(0xFF9CA3AF)),
+                            ),
+                          )
+                        : ListView.separated(
+                            itemCount: _sortedItems.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: 16),
+                            itemBuilder: (context, index) {
+                              final item = _sortedItems[index];
+                              return TimelineEntryTile(
+                                title: item.title,
+                                artist: item.artist,
+                                date: item.date,
+                                imageUrl: item.imageUrl,
+                                onTap: () => _openDetail(item),
+                              );
+                            },
+                          ))
+                    : StreamBuilder<List<TimelineEntryDoc>>(
+                        stream: timelineStream,
+                        builder: (context, snapshot) {
+                          final entries = snapshot.data ?? const [];
+                          if (entries.isEmpty) {
+                            return const Center(
+                              child: Text(
+                                '나만의 음악 추가하기',
+                                style: TextStyle(color: Color(0xFF9CA3AF)),
+                              ),
+                            );
+                          }
+                          final items = entries
+                              .map(
+                                (entry) => TimelineEntry(
+                                  id: entry.id,
+                                  trackId: entry.trackId,
+                                  title: entry.title,
+                                  artist: entry.artist,
+                                  date: entry.date,
+                                  memo: entry.memo,
+                                  imageUrl: entry.imageUrl,
+                                ),
+                              )
+                              .toList();
+                          return ListView.separated(
+                            itemCount: items.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: 16),
+                            itemBuilder: (context, index) {
+                              final item = items[index];
+                              return TimelineEntryTile(
+                                title: item.title,
+                                artist: item.artist,
+                                date: item.date,
+                                imageUrl: item.imageUrl,
+                                onTap: () => _openDetail(item),
+                              );
+                            },
                           );
                         },
                       ),
@@ -232,7 +328,7 @@ class _TimelineEditorDialog extends StatefulWidget {
 
   final TimelineEntry? entry;
   final List<Track> tracks;
-  final void Function(Track track, DateTime date, String memo) onSave;
+  final Future<void> Function(Track track, DateTime date, String memo) onSave;
 
   @override
   State<_TimelineEditorDialog> createState() => _TimelineEditorDialogState();
@@ -387,7 +483,7 @@ class _TimelineEditorDialogState extends State<_TimelineEditorDialog> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
                         if (selectedTrack == null || selectedDate == null) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
@@ -398,7 +494,7 @@ class _TimelineEditorDialogState extends State<_TimelineEditorDialog> {
                           );
                           return;
                         }
-                        widget.onSave(
+                        await widget.onSave(
                           selectedTrack!,
                           selectedDate!,
                           memoController.text.trim(),
@@ -483,147 +579,6 @@ class _TimelineHeader extends StatelessWidget {
           ),
           _GradientButton(label: '추가', onTap: onAdd),
         ],
-      ),
-    );
-  }
-}
-
-class _TimelineTile extends StatelessWidget {
-  const _TimelineTile({required this.entry, required this.onTap});
-
-  final TimelineEntry entry;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return IntrinsicHeight(
-      // ?듭떖: Row ?믪씠瑜??먯떇 移대뱶 ?믪씠??留욎땄
-      child: Row(
-        crossAxisAlignment:
-            CrossAxisAlignment.stretch, // ?듭떖: ?쇱そ ?쇱씤???몃줈濡??섏뼱?????덇쾶
-        children: [
-          SizedBox(
-            width: 28,
-            child: Stack(
-              fit: StackFit.expand, // ?듭떖: Stack ?먯껜媛 二쇱뼱吏??믪씠瑜??뺤떎??梨꾩?
-              children: [
-                Align(
-                  alignment: Alignment.center,
-                  child: Container(
-                    width: 3,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFD6C6FF),
-                      borderRadius: BorderRadius.circular(99),
-                    ),
-                  ),
-                ),
-                Align(
-                  // top: 18 媛숈? ?덈?媛?????곷? ?꾩튂濡?
-                  alignment: const Alignment(-0.1, -0.6),
-                  child: Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: const Color(0xFF8B5CF6),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color(0x33000000),
-                          blurRadius: 4,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: InkWell(
-              onTap: onTap,
-              borderRadius: BorderRadius.circular(20),
-              child: Ink(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x14000000),
-                      blurRadius: 12,
-                      offset: Offset(0, 6),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    _AlbumImage(url: entry.imageUrl),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            entry.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          _IconText(
-                            icon: Icons.music_note,
-                            text: entry.artist,
-                            color: const Color(0xFF6B7280),
-                          ),
-                          const SizedBox(height: 6),
-                          _IconText(
-                            icon: Icons.calendar_today,
-                            text: _formatDate(entry.date),
-                            color: const Color(0xFF6B7280),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AlbumImage extends StatelessWidget {
-  const _AlbumImage({required this.url});
-
-  final String url;
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(14),
-      child: Image.network(
-        url,
-        width: 64,
-        height: 64,
-        fit: BoxFit.cover,
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) {
-            return child;
-          }
-          return _ImagePlaceholder(width: 64, height: 64);
-        },
-        errorBuilder: (context, error, stackTrace) {
-          return _ImagePlaceholder(width: 64, height: 64);
-        },
       ),
     );
   }
