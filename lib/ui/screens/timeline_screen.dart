@@ -179,7 +179,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
                 child: _sortedItems.isEmpty
                     ? const Center(
                         child: Text(
-                          '?꾩쭅 ??꾨씪?몄뿉 異붽???怨≪씠 ?놁뼱??',
+                          '나만의 음악 추가하기',
                           style: TextStyle(color: Color(0xFF9CA3AF)),
                         ),
                       )
@@ -272,149 +272,154 @@ class _TimelineEditorDialogState extends State<_TimelineEditorDialog> {
   @override
   Widget build(BuildContext context) {
     final entry = widget.entry;
+    final viewInsets = MediaQuery.of(context).viewInsets;
+    final size = MediaQuery.of(context).size;
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Color(0xFFE7D8FF),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: size.height * 0.85),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + viewInsets.bottom),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Color(0xFFE7D8FF),
+                    ),
+                    child: const Icon(Icons.add, color: Color(0xFF6D28D9)),
                   ),
-                  child: const Icon(Icons.add, color: Color(0xFF6D28D9)),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    entry == null ? '곡 정보 추가' : '곡 정보 수정',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      entry == null ? '곡 정보 추가' : '곡 정보 수정',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
-                ),
-                IconButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.close),
-                  splashRadius: 20,
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            _LabeledField(
-              label: '곡 선택',
-              child: _TrackSelector(
-                track: selectedTrack,
-                onTap: () async {
-                  final picked = await showModalBottomSheet<Track>(
-                    context: context,
-                    isScrollControlled: true,
-                    builder: (_) => _TrackPickerSheet(
-                      tracks: widget.tracks,
-                      selectedId: selectedTrack?.id,
-                    ),
-                  );
-                  if (picked == null) return;
-                  setState(() {
-                    selectedTrack = picked;
-                  });
-                },
-              ),
-            ),
-            _LabeledField(
-              label: '날짜',
-              child: TextField(
-                controller: dateController,
-                readOnly: true,
-                onTap: () async {
-                  final now = DateTime.now();
-                  final picked = await showDatePicker(
-                    context: context,
-                    initialDate: selectedDate ?? now,
-                    firstDate: DateTime(2000),
-                    lastDate: DateTime(now.year + 3),
-                  );
-                  if (picked != null) {
-                    setState(() {
-                      selectedDate = picked;
-                      dateController.text = _formatDate(picked);
-                    });
-                  }
-                },
-                decoration: _inputDecoration(
-                  'YYYY.MM.DD',
-                ).copyWith(suffixIcon: const Icon(Icons.calendar_today)),
-              ),
-            ),
-            _LabeledField(
-              label: '추억 메모',
-              child: TextField(
-                controller: memoController,
-                minLines: 3,
-                maxLines: 4,
-                decoration: _inputDecoration('이 곡과 함께한 특별한 순간을 기록해보세요.'),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
+                  IconButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(44),
-                      foregroundColor: const Color(0xFF1F2937),
-                      backgroundColor: const Color(0xFFF1F5F9),
-                      side: const BorderSide(color: Color(0xFFE2E8F0)),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                    child: const Text('취소'),
+                    icon: const Icon(Icons.close),
+                    splashRadius: 20,
                   ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              _LabeledField(
+                label: '곡 선택',
+                child: _TrackSelector(
+                  track: selectedTrack,
+                  onTap: () async {
+                    final picked = await showModalBottomSheet<Track>(
+                      context: context,
+                      isScrollControlled: true,
+                      builder: (_) => _TrackPickerSheet(
+                        tracks: widget.tracks,
+                        selectedId: selectedTrack?.id,
+                      ),
+                    );
+                    if (picked == null) return;
+                    setState(() {
+                      selectedTrack = picked;
+                    });
+                  },
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      if (selectedTrack == null || selectedDate == null) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              '곡과 날짜를 선택해주세요',
+              ),
+              _LabeledField(
+                label: '날짜',
+                child: TextField(
+                  controller: dateController,
+                  readOnly: true,
+                  onTap: () async {
+                    final now = DateTime.now();
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: selectedDate ?? now,
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime(now.year + 3),
+                    );
+                    if (picked != null) {
+                      setState(() {
+                        selectedDate = picked;
+                        dateController.text = _formatDate(picked);
+                      });
+                    }
+                  },
+                  decoration: _inputDecoration(
+                    'YYYY.MM.DD',
+                  ).copyWith(suffixIcon: const Icon(Icons.calendar_today)),
+                ),
+              ),
+              _LabeledField(
+                label: '추억 메모',
+                child: TextField(
+                  controller: memoController,
+                  minLines: 3,
+                  maxLines: 4,
+                  decoration: _inputDecoration('이 곡과 함께한 특별한 순간을 기록해보세요.'),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(44),
+                        foregroundColor: const Color(0xFF1F2937),
+                        backgroundColor: const Color(0xFFF1F5F9),
+                        side: const BorderSide(color: Color(0xFFE2E8F0)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: const Text('취소'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        if (selectedTrack == null || selectedDate == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                '곡과 날짜를 선택해주세요',
+                              ),
                             ),
-                          ),
+                          );
+                          return;
+                        }
+                        widget.onSave(
+                          selectedTrack!,
+                          selectedDate!,
+                          memoController.text.trim(),
                         );
-                        return;
-                      }
-                      widget.onSave(
-                        selectedTrack!,
-                        selectedDate!,
-                        memoController.text.trim(),
-                      );
-                      Navigator.of(context).pop();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(44),
-                      backgroundColor: const Color(0xFF7C3AED),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+                        Navigator.of(context).pop();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(44),
+                        backgroundColor: const Color(0xFF7C3AED),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                       ),
+                      child: Text(entry == null ? '추가' : '저장'),
                     ),
-                    child: Text(entry == null ? '추가' : '저장'),
                   ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
