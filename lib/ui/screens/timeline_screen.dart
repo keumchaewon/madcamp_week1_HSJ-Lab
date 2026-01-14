@@ -179,7 +179,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
                 child: _sortedItems.isEmpty
                     ? const Center(
                         child: Text(
-                          '?꾩쭅 ??꾨씪?몄뿉 異붽???怨≪씠 ?놁뼱??',
+                          '나만의 음악 추가하기',
                           style: TextStyle(color: Color(0xFF9CA3AF)),
                         ),
                       )
@@ -273,10 +273,11 @@ class _TimelineEditorDialogState extends State<_TimelineEditorDialog> {
   Widget build(BuildContext context) {
     final entry = widget.entry;
     final viewInsets = MediaQuery.of(context).viewInsets;
+    final size = MediaQuery.of(context).size;
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxHeight: 520),
+        constraints: BoxConstraints(maxHeight: size.height * 0.85),
         child: SingleChildScrollView(
           padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + viewInsets.bottom),
           child: Column(
