@@ -11,8 +11,7 @@ class MyPageScreen extends StatelessWidget {
   const MyPageScreen({super.key});
 
   static const int _posts = 5;
-  static const int _followers = 6;
-  static const int _following = 87;
+  static const int _friends = 87;
 
   @override
   Widget build(BuildContext context) {
@@ -62,7 +61,7 @@ class MyPageScreen extends StatelessWidget {
                         const _StatItem(label: 'playlists', value: _posts),
                         _StatItem(
                           label: 'friends',
-                          value: _following,
+                          value: _friends,
                           onTap: () {
                             Navigator.of(context).push(
                               MaterialPageRoute<void>(
