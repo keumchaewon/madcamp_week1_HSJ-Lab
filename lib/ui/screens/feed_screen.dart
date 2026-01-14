@@ -25,11 +25,6 @@ class _FeedScreenState extends State<FeedScreen> {
     final appState = AppStateScope.of(context);
     await AuthService().signOut();
     appState.clearUser();
-    if (!mounted) return;
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute<void>(builder: (_) => const LoginGoogle()),
-      (_) => false,
-    );
   }
 
   void _openAddToPlaylistSheet(Track track) {
