@@ -124,6 +124,9 @@ class _OnboardingFlowState extends State<OnboardingFlow> {
       username: _username,
       selectedGenres: _selectedGenres,
     );
+
+    if (!mounted) return;
+    Navigator.of(context).pushReplacementNamed('/home');
   }
 
   @override

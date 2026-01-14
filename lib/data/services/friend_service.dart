@@ -111,19 +111,29 @@ class FriendService {
         .doc(toUid)
         .collection('friend_requests')
         .doc(uid);
+    final outgoingRef = _usersRef
+        .doc(uid)
+        .collection('outgoing_requests')
+        .doc(toUid);
 
     final existing = await requestRef.get();
     if (existing.exists) return;
 
-    await requestRef.set({
+    final batch = FirebaseFirestore.instance.batch();
+    batch.set(requestRef, {
       'fromUid': uid,
       'fromUsername': fromUsername,
       'fromProfileImageUrl': fromProfileImageUrl,
+      'status': 'pending',
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+    batch.set(outgoingRef, {
       'toUid': toUid,
       'toUsername': toUsername,
       'status': 'pending',
       'createdAt': FieldValue.serverTimestamp(),
     });
+    await batch.commit();
   }
 
   Future<void> acceptFriendRequest({
@@ -167,10 +177,18 @@ class FriendService {
     });
 
     batch.delete(requestRef);
+    batch.delete(
+      _usersRef.doc(fromUid).collection('outgoing_requests').doc(uid),
+    );
     await batch.commit();
   }
 
   Future<void> declineFriendRequest({required String fromUid}) async {
-    await _incomingRequestsRef.doc(fromUid).delete();
+    final batch = FirebaseFirestore.instance.batch();
+    batch.delete(_incomingRequestsRef.doc(fromUid));
+    batch.delete(
+      _usersRef.doc(fromUid).collection('outgoing_requests').doc(uid),
+    );
+    await batch.commit();
   }
 }

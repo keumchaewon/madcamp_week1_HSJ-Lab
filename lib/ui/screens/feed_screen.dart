@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../../data/services/auth_service.dart';
 import '../../data/services/feed_event_service.dart';
 import '../../state/app_state.dart';
+import '../screens/login_google.dart';
 import '../widgets/track_feed_card.dart';
 
 class FeedScreen extends StatefulWidget {
@@ -21,8 +22,14 @@ class _FeedScreenState extends State<FeedScreen> {
   }
 
   Future<void> _logout() async {
-    await FirebaseAuth.instance.signOut();
-    await GoogleSignIn().signOut();
+    final appState = AppStateScope.of(context);
+    await AuthService().signOut();
+    appState.clearUser();
+    if (!mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute<void>(builder: (_) => const LoginGoogle()),
+      (_) => false,
+    );
   }
 
   void _openAddToPlaylistSheet(Track track) {
@@ -44,6 +51,13 @@ class _FeedScreenState extends State<FeedScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final appState = AppStateScope.of(context);
+    final feedStream = appState.uid == null
+        ? null
+        : FirebaseFirestore.instance
+            .collection('feed_events')
+            .orderBy('createdAt', descending: true)
+            .snapshots();
     return Scaffold(
       appBar: AppBar(
         title: const Text('Music Feed'),
@@ -56,13 +70,15 @@ class _FeedScreenState extends State<FeedScreen> {
       body: SafeArea(
         child: Column(
           children: [
+            if (feedStream == null)
+              const Expanded(
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else
             /// ===== Firestore Feed =====
             Expanded(
               child: StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance
-                    .collection('feed_events')
-                    .orderBy('createdAt', descending: true)
-                    .snapshots(),
+                stream: feedStream,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());

@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-
 import '../../data/services/auth_service.dart';
-import '../../state/app_state.dart';
 
 class LoginGoogle extends StatefulWidget {
   const LoginGoogle({super.key});
@@ -14,17 +11,6 @@ class LoginGoogle extends StatefulWidget {
 class _LoginGoogleState extends State<LoginGoogle> {
   bool _isSigningIn = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _forceSignOutForTest();
-  }
-
-  // 테스트용: 항상 로그아웃 상태에서 시작
-  Future<void> _forceSignOutForTest() async {
-    await FirebaseAuth.instance.signOut();
-  }
-
   Future<void> _signIn() async {
     if (_isSigningIn) return;
 
@@ -33,13 +19,10 @@ class _LoginGoogleState extends State<LoginGoogle> {
     });
 
     try {
-      final appState = AppStateScope.of(context);
-      final authService = AuthService(appState);
-
+      final authService = AuthService();
       await authService.signInWithGoogle();
-
-      // 성공 시 AuthGate / main.dart 쪽 로직이 화면 전환 담당
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('로그인에 실패했습니다. 다시 시도해주세요.')));
