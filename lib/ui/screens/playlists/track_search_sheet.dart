@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import '../../../data/models/track_model.dart';
 import '../../../data/repositories/track_repository.dart';
 import '../../../state/app_state.dart';
-import '../../../state/playlist_store.dart';
 
 class TrackSearchSheet extends StatefulWidget {
   const TrackSearchSheet({super.key, required this.playlistId});
@@ -66,7 +65,6 @@ class _TrackSearchSheetState extends State<TrackSearchSheet> {
         child: Center(child: Text('Playlist not found')),
       );
     }
-    final playlistStore = PlaylistStore(appState);
     final trackIds = playlist.trackIds;
 
     return SafeArea(
@@ -141,22 +139,22 @@ class _TrackSearchSheetState extends State<TrackSearchSheet> {
                               style: TextStyle(color: Color(0xFF94A3B8)),
                             )
                           : TextButton(
-                              onPressed: () {
-                                final added = playlistStore.addTrackToPlaylist(
-                                  playlistId: widget.playlistId,
-                                  trackId: track.id,
-                                );
-                                if (!context.mounted) return;
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      added
-                                          ? 'Added to playlist'
-                                          : 'Already in playlist',
-                                    ),
+                            onPressed: () async {
+                              final added = await appState.addTrackToPlaylist(
+                                playlistId: widget.playlistId,
+                                trackId: track.id,
+                              );
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    added
+                                        ? 'Added to playlist'
+                                        : 'Already in playlist',
                                   ),
-                                );
-                              },
+                                ),
+                              );
+                            },
                               child: const Text('Add'),
                             ),
                     );

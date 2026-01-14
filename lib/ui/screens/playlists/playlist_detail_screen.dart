@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../../data/repositories/track_repository.dart';
 import '../../../state/app_state.dart';
-import '../../../state/playlist_store.dart';
 import 'track_search_sheet.dart';
 
 class PlaylistDetailScreen extends StatelessWidget {
@@ -150,10 +149,9 @@ class PlaylistDetailScreen extends StatelessWidget {
                         subtitle: Text(track.artist),
                         trailing: IconButton(
                           icon: const Icon(Icons.remove_circle_outline),
-                          onPressed: () {
-                            final playlistStore = PlaylistStore(appState);
-                            final bool removed = playlistStore
-                                .removeTrackFromPlaylist(
+                          onPressed: () async {
+                            final bool removed =
+                                await appState.removeTrackFromPlaylist(
                               playlistId: playlist.id,
                               trackId: track.id,
                             );

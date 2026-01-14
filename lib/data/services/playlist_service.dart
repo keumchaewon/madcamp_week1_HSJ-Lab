@@ -13,7 +13,7 @@ class PlaylistService {
   }
 
   // =========================
-  // 플레이리스트 조회
+  // 플레이리스트 목록 조회
   // =========================
   Future<List<UserPlaylist>> fetchPlaylists() async {
     final snapshot = await _playlistRef
@@ -23,8 +23,11 @@ class PlaylistService {
     return snapshot.docs.map((doc) => UserPlaylist.fromDoc(doc)).toList();
   }
 
+  // =========================
+  // 플레이리스트 개수 실시간 스트림
+  // =========================
   Stream<int> watchPlaylistCount() {
-    return _playlistRef.snapshots().map((snapshot) => snapshot.docs.length);
+    return _playlistRef.snapshots().map((snapshot) => snapshot.size);
   }
 
   // =========================
@@ -34,26 +37,21 @@ class PlaylistService {
     required String name,
     List<String>? trackIds,
   }) async {
-    try {
-      final docRef = _playlistRef.doc();
+    final docRef = _playlistRef.doc();
 
-      final playlist = UserPlaylist(
-        id: docRef.id,
-        name: name,
-        trackIds: trackIds ?? <String>[],
-      );
+    final playlist = UserPlaylist(
+      id: docRef.id,
+      name: name,
+      trackIds: trackIds ?? <String>[],
+    );
 
-      await docRef.set({
-        'name': playlist.name,
-        'trackIds': playlist.trackIds,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
+    await docRef.set({
+      'name': playlist.name,
+      'trackIds': playlist.trackIds,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
 
-      return playlist;
-    } catch (e) {
-      print('createPlaylist failed: $e');
-      rethrow;
-    }
+    return playlist;
   }
 
   // =========================
@@ -63,14 +61,9 @@ class PlaylistService {
     required String playlistId,
     required String trackId,
   }) async {
-    try {
-      await _playlistRef.doc(playlistId).update({
-        'trackIds': FieldValue.arrayUnion([trackId]),
-      });
-    } catch (e) {
-      print('addTrack failed: $e');
-      rethrow;
-    }
+    await _playlistRef.doc(playlistId).update({
+      'trackIds': FieldValue.arrayUnion([trackId]),
+    });
   }
 
   // =========================
