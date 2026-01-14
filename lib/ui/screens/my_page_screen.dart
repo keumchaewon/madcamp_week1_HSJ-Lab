@@ -82,11 +82,11 @@ class MyPageScreen extends StatelessWidget {
                     children: [
                       const CircleAvatar(
                         radius: 44,
-                        backgroundColor: Color(0xFFF1F3F6),
+                        backgroundColor: Color(0xFFEAE1FF),
                         child: Icon(
                           Icons.person,
                           size: 44,
-                          color: Colors.black54,
+                          color: Color(0xFF4B2D7A),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -179,9 +179,23 @@ class MyPageScreen extends StatelessWidget {
                   runSpacing: 8,
                   children: genres
                       .map(
-                        (genre) => Chip(
-                          label: Text(genre),
-                          backgroundColor: const Color(0xFFF1F5F9),
+                        (genre) => Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEAE1FF),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            '#$genre',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF4B2D7A),
+                            ),
+                          ),
                         ),
                       )
                       .toList(),
@@ -237,12 +251,12 @@ class _StatItem extends StatelessWidget {
       children: [
         Text(
           '$value',
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 4),
         Text(
           label,
-          style: const TextStyle(fontSize: 12, color: Colors.black54),
+          style: const TextStyle(fontSize: 13, color: Colors.black54),
         ),
       ],
     );
