@@ -1,5 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 
+import '../../state/app_state.dart';
+
 class TimelineScreen extends StatefulWidget {
   const TimelineScreen({super.key});
 
@@ -8,35 +10,7 @@ class TimelineScreen extends StatefulWidget {
 }
 
 class _TimelineScreenState extends State<TimelineScreen> {
-  final List<TimelineEntry> _items = [
-    TimelineEntry(
-      id: '1',
-      title: 'Here Comes The Sun',
-      artist: 'The Beatles',
-      date: DateTime(2025, 6, 20),
-      memo: '좋아하는 Beatles 노래 중 하나',
-      imageUrl:
-          'https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&w=800&q=80',
-    ),
-    TimelineEntry(
-      id: '2',
-      title: 'Someone Like You',
-      artist: 'Adele',
-      date: DateTime(2024, 2, 14),
-      memo: '전 연인을 생각나게 하는 노래',
-      imageUrl:
-          'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80',
-    ),
-    TimelineEntry(
-      id: '3',
-      title: 'Bohemian Rhapsody',
-      artist: 'Queen',
-      date: DateTime(2023, 7, 15),
-      memo: '',
-      imageUrl:
-          'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=800&q=80',
-    ),
-  ];
+  final List<TimelineEntry> _items = [];
 
   List<TimelineEntry> get _sortedItems {
     final items = [..._items];
@@ -45,32 +19,36 @@ class _TimelineScreenState extends State<TimelineScreen> {
   }
 
   Future<void> _openEntryEditor({TimelineEntry? entry}) async {
+    final tracks = AppStateScope.of(context).tracks;
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
         return _TimelineEditorDialog(
           entry: entry,
-          onSave: (title, artist, date, memo) {
+          tracks: tracks,
+          onSave: (selectedTrack, date, memo) {
             setState(() {
               if (entry == null) {
                 _items.add(
                   TimelineEntry(
                     id: DateTime.now().millisecondsSinceEpoch.toString(),
-                    title: title,
-                    artist: artist,
+                    trackId: selectedTrack.id,
+                    title: selectedTrack.title,
+                    artist: selectedTrack.artist,
                     date: date,
                     memo: memo,
-                    imageUrl:
-                        'https://images.unsplash.com/photo-1453090927415-5f45085b65c0?auto=format&fit=crop&w=800&q=80',
+                    imageUrl: selectedTrack.albumImage,
                   ),
                 );
               } else {
                 entry
-                  ..title = title
-                  ..artist = artist
+                  ..trackId = selectedTrack.id
+                  ..title = selectedTrack.title
+                  ..artist = selectedTrack.artist
                   ..date = date
-                  ..memo = memo;
+                  ..memo = memo
+                  ..imageUrl = selectedTrack.albumImage;
               }
             });
           },
@@ -189,7 +167,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F3FF),
+      backgroundColor: const Color(0xFFF8F7FB),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
@@ -228,6 +206,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
 class TimelineEntry {
   TimelineEntry({
     required this.id,
+    required this.trackId,
     required this.title,
     required this.artist,
     required this.date,
@@ -236,47 +215,55 @@ class TimelineEntry {
   });
 
   final String id;
+  String? trackId;
   String title;
   String artist;
   DateTime date;
   String memo;
-  final String imageUrl;
+  String imageUrl;
 }
 
 class _TimelineEditorDialog extends StatefulWidget {
-  const _TimelineEditorDialog({this.entry, required this.onSave});
+  const _TimelineEditorDialog({
+    this.entry,
+    required this.tracks,
+    required this.onSave,
+  });
 
   final TimelineEntry? entry;
-  final void Function(String title, String artist, DateTime date, String memo)
-  onSave;
+  final List<Track> tracks;
+  final void Function(Track track, DateTime date, String memo) onSave;
 
   @override
   State<_TimelineEditorDialog> createState() => _TimelineEditorDialogState();
 }
 
 class _TimelineEditorDialogState extends State<_TimelineEditorDialog> {
-  late final TextEditingController titleController;
-  late final TextEditingController artistController;
   late final TextEditingController memoController;
   late final TextEditingController dateController;
   DateTime? selectedDate;
+  Track? selectedTrack;
 
   @override
   void initState() {
     super.initState();
-    titleController = TextEditingController(text: widget.entry?.title ?? '');
-    artistController = TextEditingController(text: widget.entry?.artist ?? '');
     memoController = TextEditingController(text: widget.entry?.memo ?? '');
     selectedDate = widget.entry?.date;
     dateController = TextEditingController(
       text: selectedDate == null ? '' : _formatDate(selectedDate!),
     );
+    if (widget.entry?.trackId != null) {
+      for (final track in widget.tracks) {
+        if (track.id == widget.entry!.trackId) {
+          selectedTrack = track;
+          break;
+        }
+      }
+    }
   }
 
   @override
   void dispose() {
-    titleController.dispose();
-    artistController.dispose();
     memoController.dispose();
     dateController.dispose();
     super.dispose();
@@ -299,18 +286,14 @@ class _TimelineEditorDialogState extends State<_TimelineEditorDialog> {
                   padding: const EdgeInsets.all(8),
                   decoration: const BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      colors: [Color(0xFF9B5DE5), Color(0xFFFF6FAE)],
-                    ),
+                    color: Color(0xFFE7D8FF),
                   ),
-                  child: const Icon(Icons.add, color: Colors.white),
+                  child: const Icon(Icons.add, color: Color(0xFF6D28D9)),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    entry == null
-                        ? '곡 정보 수정'
-                        : '곡 정보 수정',
+                    entry == null ? '곡 정보 추가' : '곡 정보 수정',
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
@@ -326,17 +309,23 @@ class _TimelineEditorDialogState extends State<_TimelineEditorDialog> {
             ),
             const SizedBox(height: 16),
             _LabeledField(
-              label: '곡 제목',
-              child: TextField(
-                controller: titleController,
-                decoration: _inputDecoration('예시. Bohemian Rhapsody'),
-              ),
-            ),
-            _LabeledField(
-              label: '아티스트',
-              child: TextField(
-                controller: artistController,
-                decoration: _inputDecoration('예시. Queen'),
+              label: '곡 선택',
+              child: _TrackSelector(
+                track: selectedTrack,
+                onTap: () async {
+                  final picked = await showModalBottomSheet<Track>(
+                    context: context,
+                    isScrollControlled: true,
+                    builder: (_) => _TrackPickerSheet(
+                      tracks: widget.tracks,
+                      selectedId: selectedTrack?.id,
+                    ),
+                  );
+                  if (picked == null) return;
+                  setState(() {
+                    selectedTrack = picked;
+                  });
+                },
               ),
             ),
             _LabeledField(
@@ -395,21 +384,18 @@ class _TimelineEditorDialogState extends State<_TimelineEditorDialog> {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
-                      if (titleController.text.trim().isEmpty ||
-                          artistController.text.trim().isEmpty ||
-                          selectedDate == null) {
+                      if (selectedTrack == null || selectedDate == null) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text(
-                              '제목, 아티스트, 날짜를 입력해주세요',
+                              '곡과 날짜를 선택해주세요',
                             ),
                           ),
                         );
                         return;
                       }
                       widget.onSave(
-                        titleController.text.trim(),
-                        artistController.text.trim(),
+                        selectedTrack!,
                         selectedDate!,
                         memoController.text.trim(),
                       );
@@ -417,7 +403,7 @@ class _TimelineEditorDialogState extends State<_TimelineEditorDialog> {
                     },
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size.fromHeight(44),
-                      backgroundColor: Colors.purpleAccent,
+                      backgroundColor: const Color(0xFF7C3AED),
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
@@ -462,13 +448,13 @@ class _TimelineHeader extends StatelessWidget {
             height: 52,
             decoration: const BoxDecoration(
               shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [Color(0xFF9B5DE5), Color(0xFFFF6FAE)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              color: Color(0xFFE7D8FF),
             ),
-            child: const Icon(Icons.music_note, color: Colors.white, size: 28),
+            child: const Icon(
+              Icons.music_note,
+              color: Color(0xFF6D28D9),
+              size: 28,
+            ),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -480,7 +466,7 @@ class _TimelineHeader extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF7C3AED),
+                    color: Color(0xFF5B21B6),
                   ),
                 ),
                 SizedBox(height: 6),
@@ -693,11 +679,7 @@ class _GradientButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF9B5DE5), Color(0xFFFF6FAE)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: const Color(0xFF7C3AED),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Material(
@@ -765,6 +747,185 @@ class _IconText extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _TrackSelector extends StatelessWidget {
+  const _TrackSelector({required this.track, required this.onTap});
+
+  final Track? track;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Ink(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF5F3FF),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: const Color(0xFFEDE7FF),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.music_note,
+                color: Color(0xFF7C3AED),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: track == null
+                  ? const Text(
+                      '곡을 선택해주세요',
+                      style: TextStyle(color: Color(0xFF6B7280)),
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          track!.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          track!.artist,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(color: Color(0xFF6B7280)),
+                        ),
+                      ],
+                    ),
+            ),
+            const SizedBox(width: 8),
+            const Icon(Icons.search, color: Color(0xFF7C3AED)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TrackPickerSheet extends StatefulWidget {
+  const _TrackPickerSheet({
+    required this.tracks,
+    required this.selectedId,
+  });
+
+  final List<Track> tracks;
+  final String? selectedId;
+
+  @override
+  State<_TrackPickerSheet> createState() => _TrackPickerSheetState();
+}
+
+class _TrackPickerSheetState extends State<_TrackPickerSheet> {
+  final TextEditingController _controller = TextEditingController();
+  List<Track> _results = const [];
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(_handleQueryChanged);
+    _results = widget.tracks;
+  }
+
+  @override
+  void dispose() {
+    _controller.removeListener(_handleQueryChanged);
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _handleQueryChanged() {
+    final query = _controller.text.trim().toLowerCase();
+    setState(() {
+      if (query.isEmpty) {
+        _results = widget.tracks;
+      } else {
+        _results = widget.tracks.where((track) {
+          return track.title.toLowerCase().contains(query) ||
+              track.artist.toLowerCase().contains(query);
+        }).toList();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          16,
+          16,
+          16,
+          16 + MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _controller,
+              textInputAction: TextInputAction.search,
+              decoration: const InputDecoration(
+                hintText: '곡 또는 아티스트 검색',
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            if (_results.isEmpty)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: Text(
+                  '검색 결과가 없어요',
+                  style: TextStyle(color: Color(0xFF94A3B8)),
+                ),
+              )
+            else
+              Flexible(
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: _results.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  itemBuilder: (context, index) {
+                    final track = _results[index];
+                    final bool isSelected = track.id == widget.selectedId;
+                    return ListTile(
+                      leading: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(
+                          track.albumImage,
+                          width: 44,
+                          height: 44,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      title: Text(track.title),
+                      subtitle: Text(track.artist),
+                      trailing: isSelected
+                          ? const Icon(Icons.check, color: Color(0xFF7C3AED))
+                          : null,
+                      onTap: () => Navigator.of(context).pop(track),
+                    );
+                  },
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }

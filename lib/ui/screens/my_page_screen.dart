@@ -4,14 +4,39 @@ import '../screens/friends/friend_search_screen.dart';
 import '../screens/playlists/create_playlist_sheet.dart';
 import '../screens/playlists/playlists_screen.dart';
 import '../screens/timeline_screen.dart';
+import '../../data/services/friend_service.dart';
+import '../../data/services/playlist_service.dart';
 import '../../state/app_state.dart';
 import '../../state/playlist_store.dart';
 
 class MyPageScreen extends StatelessWidget {
   const MyPageScreen({super.key});
 
-  static const int _posts = 5;
-  static const int _friends = 87;
+  Future<void> _createPlaylist(AppState appState, String title) async {
+    final trimmed = title.trim();
+    if (trimmed.isEmpty) return;
+
+    final String? uid = appState.uid;
+    if (uid == null) {
+      final playlistStore = PlaylistStore(appState);
+      playlistStore.createPlaylist(trimmed);
+      return;
+    }
+
+    final service = PlaylistService(uid: uid);
+    final created = await service.createPlaylist(name: trimmed);
+    final existing = appState.findPlaylistById(created.id);
+    if (existing != null) return;
+
+    appState.playlists.add(
+      Playlist(
+        id: created.id,
+        name: created.name,
+        trackIds: created.trackIds,
+      ),
+    );
+    appState.notifyListeners();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,10 +44,17 @@ class MyPageScreen extends StatelessWidget {
     const double radius = 16;
 
     final AppState appState = AppStateScope.of(context);
+    final String? uid = appState.uid;
     final String username = appState.onboarding.username.isEmpty
         ? 'guest'
         : appState.onboarding.username;
     final List<String> genres = appState.onboarding.selectedGenres;
+
+    final Stream<int>? playlistCountStream = uid == null
+        ? null
+        : PlaylistService(uid: uid).watchPlaylistCount();
+    final Stream<int>? friendCountStream =
+        uid == null ? null : FriendService(uid: uid).watchFriendCount();
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -58,15 +90,31 @@ class MyPageScreen extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        const _StatItem(label: 'playlists', value: _posts),
-                        _StatItem(
-                          label: 'friends',
-                          value: _friends,
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute<void>(
-                                builder: (_) => const FriendSearchScreen(),
-                              ),
+                        StreamBuilder<int>(
+                          stream: playlistCountStream,
+                          builder: (context, snapshot) {
+                            final int count = snapshot.data ?? 0;
+                            return _StatItem(
+                              label: 'playlists',
+                              value: count,
+                            );
+                          },
+                        ),
+                        StreamBuilder<int>(
+                          stream: friendCountStream,
+                          builder: (context, snapshot) {
+                            final int count = snapshot.data ?? 0;
+                            return _StatItem(
+                              label: 'friends',
+                              value: count,
+                              onTap: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute<void>(
+                                    builder: (_) =>
+                                        const FriendSearchScreen(),
+                                  ),
+                                );
+                              },
                             );
                           },
                         ),
@@ -148,8 +196,7 @@ class MyPageScreen extends StatelessWidget {
                         isScrollControlled: true,
                         builder: (_) => CreatePlaylistSheet(
                           onCreate: (title) {
-                            final playlistStore = PlaylistStore(appState);
-                            playlistStore.createPlaylist(title);
+                            _createPlaylist(appState, title);
                           },
                         ),
                       );
