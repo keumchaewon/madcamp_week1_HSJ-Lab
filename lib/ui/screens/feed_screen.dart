@@ -25,6 +25,12 @@ class _FeedScreenState extends State<FeedScreen> {
     final appState = AppStateScope.of(context);
     await AuthService().signOut();
     appState.clearUser();
+    if (!mounted) return;
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute<void>(builder: (_) => const LoginGoogle()),
+      (_) => false,
+    );
   }
 
   void _openAddToPlaylistSheet(Track track) {
@@ -50,9 +56,9 @@ class _FeedScreenState extends State<FeedScreen> {
     final feedStream = appState.uid == null
         ? null
         : FirebaseFirestore.instance
-            .collection('feed_events')
-            .orderBy('createdAt', descending: true)
-            .snapshots();
+              .collection('feed_events')
+              .orderBy('createdAt', descending: true)
+              .snapshots();
     return Scaffold(
       appBar: AppBar(
         title: const Text('Music Feed'),
@@ -66,48 +72,47 @@ class _FeedScreenState extends State<FeedScreen> {
         child: Column(
           children: [
             if (feedStream == null)
-              const Expanded(
-                child: Center(child: CircularProgressIndicator()),
-              )
+              const Expanded(child: Center(child: CircularProgressIndicator()))
             else
-            /// ===== Firestore Feed =====
-            Expanded(
-              child: StreamBuilder<QuerySnapshot>(
-                stream: feedStream,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
+              /// ===== Firestore Feed =====
+              Expanded(
+                child: StreamBuilder<QuerySnapshot>(
+                  stream: feedStream,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
 
-                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                    return const Center(
-                      child: Text(
-                        '아직 피드가 없어요.',
-                        style: TextStyle(color: Color(0xFF94A3B8)),
-                      ),
-                    );
-                  }
-
-                  return ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                    itemCount: snapshot.data!.docs.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
-                    itemBuilder: (context, index) {
-                      final data = snapshot.data!.docs[index].data()!
-                          as Map<String, dynamic>;
-
-                      return TrackFeedCard.fromFeedEvent(
-                        actorUsername: data['actorUsername'],
-                        playlistName: data['playlistName'],
-                        trackTitle: data['trackTitle'],
-                        artistName: data['artistName'],
-                        albumImageUrl: data['albumImageUrl'],
+                    if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                      return const Center(
+                        child: Text(
+                          '아직 피드가 없어요.',
+                          style: TextStyle(color: Color(0xFF94A3B8)),
+                        ),
                       );
-                    },
-                  );
-                },
+                    }
+
+                    return ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                      itemCount: snapshot.data!.docs.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      itemBuilder: (context, index) {
+                        final data =
+                            snapshot.data!.docs[index].data()!
+                                as Map<String, dynamic>;
+
+                        return TrackFeedCard.fromFeedEvent(
+                          actorUsername: data['actorUsername'],
+                          playlistName: data['playlistName'],
+                          trackTitle: data['trackTitle'],
+                          artistName: data['artistName'],
+                          albumImageUrl: data['albumImageUrl'],
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
-            ),
           ],
         ),
       ),
